@@ -74,3 +74,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderCatalog("All");
 });
+
+// Select all View Details buttons
+const viewButtons = document.querySelectorAll('.view-details-btn');
+
+viewButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const bookTitle = button.getAttribute('data-title');
+    localStorage.setItem('selectedBook', bookTitle);
+    window.location.href = 'bookdetails.html'; // Navigate to the details page
+  });
+});
+
