@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Catalog - Pustakalayah LibraryHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Active category button */
+    .category-btn.active {
+      background-color: #4f46e5; /* indigo-600 */
+      color: white;
+      font-weight: 600;
+    }
+    .category-btn:not(.active) {
+      background-color: white;
+      color: #4f46e5;
+      border: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body class="font-sans">
+
+  <!-- Navbar placeholder -->
+  <div id="navbar"></div>
+
+  <section class="min-h-screen bg-[url('https://images.unsplash.com/photo-1532168307077-e070d65b1695?fit=crop&w=1400&h=900')] bg-cover bg-fixed py-12">
+    <div class="max-w-7xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+      <h2 class="text-4xl font-bold mb-8 text-indigo-700 text-center">Book Catalog 📚✨</h2>
+      
+      <!-- Category Buttons -->
+      <div class="flex gap-4 mb-8 overflow-x-auto py-2 px-4 border-b-2 border-indigo-200">
+        <button onclick="filterBooks('all', this)" class="category-btn active px-6 py-2 rounded-full font-medium shadow-md">All Books</button>
+        <button onclick="filterBooks('fiction', this)" class="category-btn px-6 py-2 rounded-full font-medium shadow-md">Fiction</button>
+        <button onclick="filterBooks('action', this)" class="category-btn px-6 py-2 rounded-full font-medium shadow-md">Action</button>
+        <button onclick="filterBooks('romance', this)" class="category-btn px-6 py-2 rounded-full font-medium shadow-md">Romance</button>
+        <button onclick="filterBooks('comic', this)" class="category-btn px-6 py-2 rounded-full font-medium shadow-md">Comics</button>
+        <button onclick="filterBooks('mystery', this)" class="category-btn px-6 py-2 rounded-full font-medium shadow-md">Mystery</button>
+      </div>
+
+      <!-- Book Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="bookCatalog"></div>
+    </div>
+  </section>
+
+  <script>
+    const books = [
+      { title: "The Lost City", author: "Sarah Mitchell", category: "fiction", image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600", description: "A thrilling tale of discovery and adventure in an ancient civilization." },
+      { title: "Midnight Chase", author: "James Anderson", category: "action", image: "https://images.unsplash.com/photo-1589998059171-988d887df646?fit=crop&w=400&h=600", description: "High-stakes pursuit through the dark streets of London." },
+      { title: "Love in Paris", author: "Emily Roberts", category: "romance", image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?fit=crop&w=400&h=600", description: "A romantic journey through the city of love." },
+      { title: "Superhero Chronicles", author: "Mike Turner", category: "comic", image: "https://images.unsplash.com/photo-1608889476518-738c9b1dcb40?fit=crop&w=400&h=600", description: "Action-packed adventures of modern-day heroes." },
+      { title: "The Silent Witness", author: "Patricia Blake", category: "mystery", image: "https://images.unsplash.com/photo-1587876931567-564ce588bfbd?fit=crop&w=400&h=600", description: "A gripping mystery that will keep you guessing until the end." },
+      { title: "Dragon's Rise", author: "Robert King", category: "fiction", image: "https://m.media-amazon.com/images/I/71zr12FF4kL._AC_UF1000,1000_QL80_.jpg", description: "Epic fantasy tale of dragons and magic." },
+      { title: "Urban Warriors", author: "David Chen", category: "action", image: "https://m.media-amazon.com/images/I/81qBSSkGfvL._UF1000,1000_QL80_.jpg", description: "Modern martial arts action in the concrete jungle." },
+      { title: "Sunset Dreams", author: "Sofia Garcia", category: "romance", image: "https://m.media-amazon.com/images/I/71iLEh7q--L._UF1000,1000_QL80_.jpg", description: "A beautiful story of summer love and new beginnings." },
+      { title: "Mystery Manor", author: "Thomas Wright", category: "mystery", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?fit=crop&w=400&h=600", description: "Strange occurrences in an old English manor." },
+      { title: "Hero Academy", author: "Lisa Chang", category: "comic", image: "https://images.unsplash.com/photo-1608889476518-738c9b1dcb40?fit=crop&w=400&h=600", description: "Young heroes learning to master their powers." }
+    ];
+
+    function renderBooks(category = 'all') {
+      const catalog = document.getElementById('bookCatalog');
+      catalog.innerHTML = '';
+      const filtered = category === 'all' ? books : books.filter(b => b.category === category);
+      filtered.forEach(book => {
+        catalog.innerHTML += `
+          <div class="bg-white p-6 rounded-xl shadow-lg transform transition duration-300 hover:scale-105 border-t-4 border-indigo-200">
+            <img src="${book.image}" alt="${book.title}" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
+            <div class="space-y-2">
+              <h3 class="font-bold text-xl text-gray-800">${book.title}</h3>
+              <p class="text-gray-600">${book.author}</p>
+              <p class="text-sm text-indigo-500 italic font-medium">${book.category.charAt(0).toUpperCase() + book.category.slice(1)}</p>
+              <p class="text-sm text-gray-700 line-clamp-2">${book.description}</p>
+              <button class="mt-3 w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md"
+                onclick="viewBook('${book.title}')">View Details</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function filterBooks(category, btn) {
+      document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderBooks(category);
+    }
+
+    function viewBook(title) {
+      localStorage.setItem('selectedBook', title);
+      window.location.href = 'bookDetails.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => renderBooks());
+  </script>
+  <script src="js/navbar.js"></script>
+  <script src="js/catalog.js"></script>
+</body>
+</html>

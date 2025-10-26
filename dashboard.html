@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Pustakalayah LibraryHub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <section id="dashboard" class="min-h-screen bg-gray-100 bg-[url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?fit=crop&w=1400&h=500')] bg-cover bg-fixed pt-20 pb-10">
+    <div class="max-w-7xl mx-auto px-4">
+      <h2 class="text-4xl font-extrabold mb-10 text-white drop-shadow-lg p-3 bg-indigo-700/80 rounded-xl inline-block">Dashboard Overview 📊</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-xl shadow-2xl border-b-4 border-indigo-500 transform transition hover:scale-[1.02] duration-300">
+          <h3 class="font-bold text-xl mb-2 text-indigo-700 flex items-center gap-2">Total Books <span class="text-2xl">📘</span></h3>
+          <p id="bookCount" class="text-5xl font-extrabold text-indigo-600">1200</p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-2xl border-b-4 border-green-500 transform transition hover:scale-[1.02] duration-300">
+          <h3 class="font-bold text-xl mb-2 text-green-700 flex items-center gap-2">Active Members <span class="text-2xl">🧑‍🤝‍🧑</span></h3>
+          <p id="memberCount" class="text-5xl font-extrabold text-green-600">350</p>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-2xl border-b-4 border-yellow-500 transform transition hover:scale-[1.02] duration-300">
+          <h3 class="font-bold text-xl mb-2 text-yellow-700 flex items-center gap-2">Books Borrowed <span class="text-2xl">⏳</span></h3>
+          <p id="borrowCount" class="text-5xl font-extrabold text-yellow-600">80</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

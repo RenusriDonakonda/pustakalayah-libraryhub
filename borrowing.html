@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Borrowing - Pustakalayah LibraryHub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <section id="borrowing" class="min-h-screen py-10 bg-blue-50 bg-[url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?fit=crop&w=1400&h=900')] bg-cover bg-fixed">
+    <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+      <h2 class="text-4xl font-bold mb-6 text-indigo-700">Borrowed Books 📚</h2>
+
+      <p class="text-xl font-semibold mb-6 p-4 bg-green-50 rounded-lg shadow-inner text-green-800">
+        Total Borrowed Books: <span id="borrowCountDisplay" class="text-2xl font-extrabold text-green-600">0</span>
+      </p>
+
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+        <table class="min-w-full text-left">
+          <thead class="bg-green-600 text-white">
+            <tr>
+              <th class="p-4">Book Title</th>
+              <th class="p-4">Author</th>
+              <th class="p-4">Action</th>
+            </tr>
+          </thead>
+          <tbody id="borrowList">
+            <!-- Borrowed books dynamically rendered -->
+          </tbody>
+        </table>
+        <p id="emptyBorrowMessage" class="p-4 text-center text-gray-500 hidden">You haven't borrowed any books yet. Time to read!</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    let borrowedBooks = JSON.parse(localStorage.getItem("borrowed") || "[]");
+
+    const borrowList = document.getElementById("borrowList");
+    const borrowCountDisplay = document.getElementById("borrowCountDisplay");
+    const emptyBorrowMessage = document.getElementById("emptyBorrowMessage");
+
+    function renderBorrowedBooks() {
+      borrowList.innerHTML = "";
+      if (borrowedBooks.length === 0) {
+        emptyBorrowMessage.classList.remove("hidden");
+        borrowCountDisplay.textContent = 0;
+        return;
+      }
+
+      emptyBorrowMessage.classList.add("hidden");
+      borrowCountDisplay.textContent = borrowedBooks.length;
+
+      borrowedBooks.forEach(book => {
+        const row = document.createElement("tr");
+        row.classList.add("border-b", "hover:bg-green-50");
+        row.innerHTML = `
+          <td class="p-4 font-semibold">${book.title}</td>
+          <td class="p-4">${book.author}</td>
+          <td class="p-4">
+            <button onclick="returnBook('${book.title}')" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">Return</button>
+          </td>
+        `;
+        borrowList.appendChild(row);
+      });
+    }
+
+    window.returnBook = function (title) {
+      borrowedBooks = borrowedBooks.filter(b => b.title !== title);
+      localStorage.setItem("borrowed", JSON.stringify(borrowedBooks));
+      renderBorrowedBooks();
+      alert(`${title} has been returned!`);
+    };
+
+    renderBorrowedBooks();
+  });
+</script>
+
+
+</body>
+</html>

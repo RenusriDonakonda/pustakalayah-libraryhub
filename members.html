@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Members - Pustakalayah LibraryHub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <section id="members" class="min-h-screen py-10 bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100 bg-[url('https://images.unsplash.com/photo-1519681393784-d120267933ba?fit=crop&w=1600&h=1000')] bg-cover bg-center bg-fixed">
+    <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+      <h2 class="text-4xl font-bold mb-6 text-indigo-700">Members List 🧑‍🤝‍🧑</h2>
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+        <table class="min-w-full text-left">
+          <thead class="bg-gray-200 text-gray-700">
+            <tr>
+              <th class="p-4">Name</th>
+              <th class="p-4">Email</th>
+              <th class="p-4">Member Since</th>
+            </tr>
+          </thead>
+          <tbody id="memberList">
+            <!-- Members dynamically rendered by main.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+
+  <script src="js/members.js"></script>
+</body>
+</html>
