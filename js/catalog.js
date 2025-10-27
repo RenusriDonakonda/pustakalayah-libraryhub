@@ -75,14 +75,42 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCatalog("All");
 });
 
-// Select all View Details buttons
-const viewButtons = document.querySelectorAll('.view-details-btn');
+// js/catalog.js
 
-viewButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const bookTitle = button.getAttribute('data-title');
-    localStorage.setItem('selectedBook', bookTitle);
-    window.location.href = 'bookdetails.html'; // Navigate to the details page
-  });
+// Book data
+const books = [
+  { title: "The Lost City", author: "Sarah Mitchell", category: "fiction", image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600" },
+  { title: "Midnight Chase", author: "James Anderson", category: "action", image: "https://images.unsplash.com/photo-1589998059171-988d887df646?fit=crop&w=400&h=600" },
+  { title: "Love in Paris", author: "Emily Roberts", category: "romance", image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?fit=crop&w=400&h=600" },
+  { title: "Superhero Chronicles", author: "Mike Turner", category: "comic", image: "https://images.unsplash.com/photo-1608889476518-738c9b1dcb40?fit=crop&w=400&h=600" },
+  { title: "The Silent Witness", author: "Patricia Blake", category: "mystery", image: "https://images.unsplash.com/photo-1587876931567-564ce588bfbd?fit=crop&w=400&h=600" }
+];
+
+// Function to render books
+const catalogContainer = document.getElementById('catalogContainer');
+
+if (catalogContainer) {
+  catalogContainer.innerHTML = books.map(book => `
+    <div class="bg-white rounded-xl shadow-lg p-4 flex flex-col justify-between hover:shadow-2xl transition">
+      <img src="${book.image}" alt="${book.title}" class="rounded-lg h-64 w-full object-cover mb-4">
+      <h3 class="text-xl font-bold text-gray-800">${book.title}</h3>
+      <p class="text-indigo-600 font-semibold mb-4">${book.author}</p>
+      <button 
+        class="view-details-btn bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+        data-title="${book.title}">
+        View Details
+      </button>
+    </div>
+  `).join('');
+}
+
+// Handle “View Details” button clicks
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('view-details-btn')) {
+    const title = e.target.getAttribute('data-title');
+    localStorage.setItem('selectedBook', title);
+    window.location.href = 'bookdetails.html';
+  }
 });
+
 
