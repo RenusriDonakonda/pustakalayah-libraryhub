@@ -6,7 +6,7 @@
 
 **Developed by:** Vinay Beerpuri  
 **Technology Stack:** HTML5, CSS3, JavaScript, Python FastAPI, SQLite  
-**Date:** October 2024
+**Date:** October 2025
 
 ---
 

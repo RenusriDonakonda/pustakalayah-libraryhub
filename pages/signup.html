@@ -17,12 +17,25 @@
       </div>
       <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">Sign Up for Pustakalayah LibraryHub</h2>
       <form id="signupForm" class="space-y-4">
-        <input type="text" id="newUsername" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <input type="email" id="email" placeholder="Email" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <input type="password" id="newPassword" placeholder="Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Sign Up</button>
+        <div>
+          <input type="text" id="newUsername" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-sm text-red-500 mt-1 hidden" id="usernameError"></p>
+        </div>
+        <div>
+          <input type="email" id="email" placeholder="Email" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-sm text-red-500 mt-1 hidden" id="emailError"></p>
+        </div>
+        <div>
+          <input type="password" id="newPassword" placeholder="Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-sm text-red-500 mt-1 hidden" id="passwordError"></p>
+        </div>
+        <button type="submit" id="signupButton" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Sign Up</button>
       </form>
-      <p class="mt-4 text-center">Already have an account? <a href="login.html" class="text-indigo-600 font-bold hover:underline">Login</a></p>
+      <div id="signupSpinner" class="hidden mt-4 flex justify-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+      <p class="text-red-500 mt-4 hidden" id="signupError"></p>
+  <p class="mt-4 text-center">Already have an account? <a href="login.html" class="text-indigo-600 font-bold hover:underline">Login</a></p>
     </div>
   </section>
 

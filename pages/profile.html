@@ -35,12 +35,28 @@
     <div class="max-w-md w-full mx-auto p-8 rounded-xl shadow-2xl bg-white/95 border-t-4 border-indigo-500">
       <h2 class="text-3xl font-bold mb-6 text-indigo-700 text-center">My Profile 👤</h2>
 
-      <div class="flex flex-col items-center mb-6">
-        <img id="profileAvatar" src="https://via.placeholder.com/120" class="w-28 h-28 rounded-full mb-4 border-4 border-indigo-400 shadow-lg object-cover cursor-pointer hover:opacity-80 transition" alt="User Avatar">
+    <div class="flex flex-col items-center mb-6">
+  <img id="profileAvatar" src="assets/avatars/avatar1.svg" class="w-28 h-28 rounded-full mb-4 border-4 border-indigo-400 shadow-lg object-cover cursor-pointer hover:opacity-80 transition" alt="User Avatar">
         <input type="file" id="avatarInput" class="hidden" accept="image/*">
         <button id="changeAvatarBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 hover:scale-105 transition transform shadow-md font-semibold">
           Change Avatar
         </button>
+        <button id="chooseFromGalleryBtn" class="mt-2 text-sm text-indigo-600 hover:underline">Choose from gallery</button>
+        <!-- Avatar gallery modal -->
+        <div id="avatarGalleryOverlay" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+          <div class="bg-white rounded-xl p-6 w-11/12 max-w-3xl shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Choose an avatar</h3>
+              <button id="closeAvatarGallery" class="text-gray-600 hover:text-gray-800">Close ✖</button>
+            </div>
+            <div id="avatarGallery" class="grid grid-cols-4 gap-4">
+              <!-- avatars inserted dynamically -->
+            </div>
+            <div class="mt-4 text-right">
+              <button id="uploadAvatarBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Upload custom</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="space-y-4">

@@ -17,12 +17,21 @@
       </div>
       <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">Pustakalayah LibraryHub Login</h2>
       <form id="loginForm" class="space-y-4">
-        <input type="text" id="username" placeholder="Username" value="admin" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <input type="password" id="password" placeholder="Password" value="admin" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Login</button>
+        <div>
+          <input type="text" id="username" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-sm text-red-500 mt-1 hidden" id="usernameError"></p>
+        </div>
+        <div>
+          <input type="password" id="password" placeholder="Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <p class="text-sm text-red-500 mt-1 hidden" id="passwordError"></p>
+        </div>
+        <button type="submit" id="loginButton" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Login</button>
       </form>
-      <p class="text-red-500 mt-4 hidden" id="loginError">Invalid username or password</p>
-      <p class="mt-4 text-center">Don't have an account? <a href="signup.html" class="text-indigo-600 font-bold hover:underline">Sign Up</a></p>
+      <p class="text-red-500 mt-4 hidden" id="loginError"></p>
+      <div id="loginSpinner" class="hidden mt-4 flex justify-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+  <p class="mt-4 text-center">Don't have an account? <a href="signup.html" class="text-indigo-600 font-bold hover:underline">Sign Up</a></p>
     </div>
   </section>
 

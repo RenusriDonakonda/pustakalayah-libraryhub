@@ -4,12 +4,20 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000; // Changed to port 8000 to avoid conflicts
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://127.0.0.1:5500', 'http://localhost:3000', 'http://localhost:5500'],
+  credentials: true
+}));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../pages')));
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 // API Routes
 app.use('/api/users', require('./api/users'));
@@ -17,10 +25,26 @@ app.use('/api/books', require('./api/books'));
 app.use('/api/borrowing', require('./api/borrowing'));
 
 // Serve static files
-app.use(express.static(path.join(__dirname, '../')));
+app.use('/', express.static(path.join(__dirname, '../')));
 
-// Default route - serve login page
-app.get('/', (req, res) => {
+// Default route - serve index.html for both root and /index.html
+app.get(['/', '/index.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
+
+// Fallback route for direct page access
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  if (req.path.endsWith('.html')) {
+    const filePath = path.join(__dirname, '..', req.path);
+    // Check if file exists
+    if (require('fs').existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+  }
+  // If no matching file, serve index.html
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
