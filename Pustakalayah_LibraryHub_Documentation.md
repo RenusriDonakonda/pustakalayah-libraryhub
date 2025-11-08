@@ -8,6 +8,7 @@
 **Technology Stack:** HTML5, CSS3, JavaScript, Python FastAPI, SQLite  
 **Date:** October 2025
 
+
 ---
 
 ## Slide 2: Project Overview

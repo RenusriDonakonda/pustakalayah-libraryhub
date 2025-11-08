@@ -17,3 +17,60 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Responsive tweaks for small screens */
+@media (max-width: 900px) {
+  /* Make large hero text scale down on mobile */
+  .text-6xl { font-size: 2.25rem /* 36px */; }
+  .text-4xl { font-size: 1.75rem /* 28px */; }
+
+  /* Reduce paddings on many sections for small screens */
+  .max-w-7xl.mx-auto.px-4.py-4 { padding-left: 1rem; padding-right: 1rem; }
+  .max-w-7xl .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+
+  /* Tables become stacked cards for readability on mobile */
+  table.min-w-full { display: block; }
+  table.min-w-full thead { display: none; }
+  table.min-w-full tbody, table.min-w-full tr { display: block; }
+  table.min-w-full tr { margin-bottom: 1rem; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  table.min-w-full td { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #f3f4f6; background: #fff; }
+  table.min-w-full td:last-child { border-bottom: none; }
+
+  /* Make profile card full width */
+  .max-w-md { width: 100% !important; max-width: 100% !important; }
+}
+
+/* Responsive background-image overrides to reduce bandwidth on mobile */
+@media (max-width: 900px) {
+  section#login, section#signup {
+    background-image: url('https://images.unsplash.com/photo-1568667256549-094345857637?fit=crop&w=800&h=600') !important;
+    background-size: cover;
+  }
+  section#home {
+    background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?fit=crop&w=800&h=600') !important;
+  }
+  section#dashboard { background-image: url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?fit=crop&w=800&h=400') !important; }
+  section#catalog { background-image: url('https://images.unsplash.com/photo-1532168307077-e070d65b1695?fit=crop&w=800&h=600') !important; }
+  section#bookDetails { background-image: url('https://images.unsplash.com/photo-1533660502127-142f1f00889c?fit=crop&w=800&h=600') !important; }
+  section#cart { background-image: url('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?fit=crop&w=800&h=600') !important; }
+  section#borrowing { background-image: url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?fit=crop&w=800&h=600') !important; }
+  section#members { background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?fit=crop&w=800&h=600') !important; }
+  section#profile { background-image: url('https://images.unsplash.com/photo-1522205411046-284e8a1d1d8b?fit=crop&w=800&h=600') !important; }
+}
+
+/* Small utility to ensure avatar images stay responsive */
+.object-cover { max-width: 100%; height: auto; }
+
+/* Mobile menu animation: when open, translate to 0 */
+#mobileMenu.open { transform: translateX(0) !important; }
+#mobileMenuOverlay.show { display: block !important; }
+
+/* Back-to-top button visible animation */
+#backToTop.show { display: block !important; opacity: 1; transform: translateY(0); }
+#backToTop { transition: opacity 0.2s ease, transform 0.2s ease; opacity: 0; transform: translateY(8px); }
+
+/* Lightbox styles */
+#avatarLightbox { display: none; }
+#avatarLightbox.flex { display: flex; }
+#avatarLightbox img { max-height: 80vh; }
+#avatarLightbox [data-close] { right: 0.5rem; top: 0.5rem; }

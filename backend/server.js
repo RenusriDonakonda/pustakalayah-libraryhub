@@ -8,10 +8,11 @@ const PORT = process.env.PORT || 8000; // Changed to port 8000 to avoid conflict
 
 // Middleware
 app.use(cors({
-  origin: ['http://127.0.0.1:5500', 'http://localhost:3000', 'http://localhost:5500'],
+  origin: '*', // Allow all origins for development
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increased limit for base64 avatar data
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Log all incoming requests
 app.use((req, res, next) => {
@@ -24,8 +25,10 @@ app.use('/api/users', require('./api/users'));
 app.use('/api/books', require('./api/books'));
 app.use('/api/borrowing', require('./api/borrowing'));
 
-// Serve static files
+// Serve static files (project root)
 app.use('/', express.static(path.join(__dirname, '../')));
+// Serve uploaded files (avatars) from backend/uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Default route - serve index.html for both root and /index.html
 app.get(['/', '/index.html'], (req, res) => {

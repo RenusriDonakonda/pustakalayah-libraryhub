@@ -26,7 +26,66 @@
       <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Login</button>
     </form>
     <p class="text-red-500 mt-4 hidden" id="loginError">Invalid username or password</p>
-    <p class="mt-4 text-center">Don't have an account? <a href="#" id="showSignup" class="text-indigo-600 font-bold hover:underline">Sign Up</a></p>
+    <p class="text-yellow-600 mt-4 hidden bg-yellow-50 p-3 rounded-lg" id="verificationMessage"></p>
+    <button type="button" id="resendVerificationBtn" class="w-full bg-yellow-500 text-white p-2 rounded-lg shadow-md hover:bg-yellow-600 transition hidden mt-2">Resend Verification Email</button>
+    <p class="mt-4 text-center">
+      <a href="#" id="showForgotPassword" class="text-indigo-600 font-bold hover:underline text-sm">Forgot Password?</a>
+    </p>
+    <p class="mt-2 text-center">Don't have an account? <a href="#" id="showSignup" class="text-indigo-600 font-bold hover:underline">Sign Up</a></p>
+  </div>
+</section>
+
+<section id="forgotPassword" class="min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1568667256549-094345857637?fit=crop&w=1200&h=800')] bg-cover bg-center hidden page-section">
+  <div class="max-w-md w-full bg-white/90 p-10 rounded-2xl shadow-2xl backdrop-blur-md">
+    <div class="flex justify-center mb-6">
+      <div class="flex flex-col items-center mb-6">
+        <img src="logo.jpg" alt="Pustakalayah LibraryHub Logo" class="h-20 w-auto mb-4 rounded-xl shadow-lg">
+      </div>
+    </div>
+    <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">Forgot Password</h2>
+    
+    <!-- Step 1: Enter Username/Email -->
+    <div id="forgotPasswordStep1" class="space-y-4">
+      <p class="text-gray-600 text-center mb-4">Enter your username or email to receive OTP on your registered mobile number</p>
+      <form id="forgotPasswordForm1" class="space-y-4">
+        <input type="text" id="forgotUsername" placeholder="Username or Email" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+        <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Send OTP</button>
+      </form>
+      <p class="text-red-500 mt-4 hidden" id="forgotPasswordError1"></p>
+      <p class="mt-4 text-center">
+        <a href="#" id="backToLogin" class="text-indigo-600 font-bold hover:underline">Back to Login</a>
+      </p>
+    </div>
+
+    <!-- Step 2: Enter OTP -->
+    <div id="forgotPasswordStep2" class="space-y-4 hidden">
+      <p class="text-gray-600 text-center mb-4">Enter the OTP sent to your mobile number</p>
+      <form id="forgotPasswordForm2" class="space-y-4">
+        <input type="text" id="otpCode" placeholder="Enter 6-digit OTP" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center text-2xl tracking-widest" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" required>
+        <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Verify OTP</button>
+      </form>
+      <p class="text-red-500 mt-4 hidden" id="forgotPasswordError2"></p>
+      <p class="text-center text-sm">
+        <a href="#" id="resendOtp" class="text-indigo-600 hover:underline">Resend OTP</a>
+      </p>
+      <p class="mt-4 text-center">
+        <a href="#" id="backToLogin2" class="text-indigo-600 font-bold hover:underline">Back to Login</a>
+      </p>
+    </div>
+
+    <!-- Step 3: Reset Password -->
+    <div id="forgotPasswordStep3" class="space-y-4 hidden">
+      <p class="text-gray-600 text-center mb-4">Enter your new password</p>
+      <form id="forgotPasswordForm3" class="space-y-4">
+        <input type="password" id="newPasswordReset" placeholder="New Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+        <input type="password" id="confirmPasswordReset" placeholder="Confirm New Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+        <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Reset Password</button>
+      </form>
+      <p class="text-red-500 mt-4 hidden" id="forgotPasswordError3"></p>
+      <p class="mt-4 text-center">
+        <a href="#" id="backToLogin3" class="text-indigo-600 font-bold hover:underline">Back to Login</a>
+      </p>
+    </div>
   </div>
 </section>
 
@@ -43,6 +102,7 @@
     <form id="signupForm" class="space-y-4">
       <input type="text" id="newUsername" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <input type="email" id="email" placeholder="Email" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <input type="tel" id="mobile" placeholder="Mobile Number (e.g., +1234567890)" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
       <input type="password" id="newPassword" placeholder="Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Sign Up</button>
     </form>
@@ -57,7 +117,8 @@
         <div class="text-3xl text-indigo-600">📖</div>
         <span class="text-xl font-bold text-indigo-600">Pustakalayah LibraryHub</span>
       </div>
-      <div class="space-x-4 flex items-center">
+      <!-- Desktop menu -->
+      <div class="space-x-4 flex items-center hidden md:flex">
         <button onclick="showPage('home')" class="text-gray-700 hover:text-indigo-600 font-medium">Home</button>
         <button onclick="showPage('dashboard')" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</button>
         <button onclick="showPage('catalog')" class="text-gray-700 hover:text-indigo-600 font-medium">Catalog</button>
@@ -69,7 +130,36 @@
         <button onclick="showPage('profile')" class="text-gray-700 hover:text-indigo-600 font-medium">Profile</button>
         <button id="logoutBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
       </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden flex items-center">
+        <button id="mobileMenuBtn" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false" class="p-2 rounded-md text-gray-700 hover:bg-gray-100">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
     </div>
+    <!-- Mobile menu (off-canvas) -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black/40 hidden z-40" aria-hidden="true"></div>
+    <nav id="mobileMenu" role="dialog" aria-modal="true" aria-labelledby="mobileMenuTitle" class="fixed inset-y-0 left-0 w-72 transform -translate-x-full transition-transform duration-300 ease-in-out bg-white z-50 shadow-xl md:hidden">
+      <div class="p-4 flex items-center justify-between border-b">
+        <h3 id="mobileMenuTitle" class="text-lg font-semibold">Menu</h3>
+        <button id="mobileMenuClose" aria-label="Close menu" class="p-2 rounded-md text-gray-600 hover:bg-gray-100">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 8.586L15.293 3.293a1 1 0 111.414 1.414L11.414 10l5.293 5.293a1 1 0 11-1.414 1.414L10 11.414l-5.293 5.293a1 1 0 01-1.414-1.414L8.586 10 3.293 4.707A1 1 0 114.707 3.293L10 8.586z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div class="p-4 space-y-2">
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="home">Home</button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="dashboard">Dashboard</button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="catalog">Catalog</button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="cart">Cart <span id="navCartCountMobile" class="ml-2 inline-block bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 text-center align-middle">0</span></button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="borrowing">Borrowing</button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="members">Members</button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="profile">Profile</button>
+        <button id="logoutBtnMobile" class="w-full bg-red-500 text-white px-3 py-2 rounded-lg font-semibold hover:bg-red-600 transition text-left">Logout</button>
+      </div>
+    </nav>
   </nav>
 
   <section id="home" class="min-h-screen bg-[url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?fit=crop&w=1400&h=900')] bg-cover bg-center page-section">
@@ -237,6 +327,7 @@
         <table class="min-w-full text-left">
           <thead class="bg-gray-200 text-gray-700">
             <tr>
+                <th class="p-4">Avatar</th>
               <th class="p-4">Name</th>
               <th class="p-4">Email</th>
               <th class="p-4">Member Since</th>
@@ -285,5 +376,36 @@
 
 <script src="script.js"></script>
 
+<!-- Mobile bottom nav & back-to-top -->
+<div id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 md:hidden bg-white/95 border-t flex justify-around py-2 shadow-lg z-40">
+  <button onclick="showPage('home')" class="flex flex-col items-center text-sm text-gray-700">
+    <span class="text-2xl">🏠</span>
+    <span>Home</span>
+  </button>
+  <button onclick="showPage('catalog')" class="flex flex-col items-center text-sm text-gray-700">
+    <span class="text-2xl">📚</span>
+    <span>Catalog</span>
+  </button>
+  <button onclick="showPage('profile')" class="flex flex-col items-center text-sm text-gray-700">
+    <span class="text-2xl">👤</span>
+    <span>Profile</span>
+  </button>
+  <button onclick="showPage('cart')" class="flex flex-col items-center text-sm text-gray-700">
+    <span class="text-2xl">🛒</span>
+    <span>Cart</span>
+  </button>
+</div>
+
+<button id="backToTop" aria-label="Back to top" class="hidden fixed bottom-20 right-4 z-50 bg-indigo-600 text-white p-3 rounded-full shadow-lg md:hidden">↑</button>
+
+<!-- Avatar lightbox -->
+<div id="avatarLightbox" class="hidden fixed inset-0 z-50 bg-black/80 items-center justify-center p-4">
+  <div class="relative max-w-md w-full">
+    <button data-close aria-label="Close avatar preview" class="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md">✕</button>
+    <img src="" alt="Avatar preview" class="w-full h-auto rounded-lg shadow-xl object-contain">
+  </div>
+</div>
+
 </body>
 </html>
+

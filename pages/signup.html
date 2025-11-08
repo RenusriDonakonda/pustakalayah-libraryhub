@@ -17,6 +17,18 @@
       </div>
       <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">Sign Up for Pustakalayah LibraryHub</h2>
       <form id="signupForm" class="space-y-4">
+        <div class="flex justify-center mb-4">
+          <div class="relative group">
+            <div id="avatarPreview" class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer overflow-hidden">
+              <span id="avatarInitials" class="text-2xl text-gray-500">?</span>
+              <img id="avatarImage" class="w-full h-full object-cover hidden" alt="Avatar">
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" class="hidden">
+            <div class="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+              <span class="text-white opacity-0 group-hover:opacity-100">Change</span>
+            </div>
+          </div>
+        </div>
         <div>
           <input type="text" id="newUsername" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <p class="text-sm text-red-500 mt-1 hidden" id="usernameError"></p>
