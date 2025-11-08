@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members - Pustakalayah LibraryHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="font-sans">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="text-3xl text-indigo-600">📖</div>
+        <span class="text-xl font-bold text-indigo-600">Pustakalayah LibraryHub</span>
+      </div>
+      <div class="space-x-4 flex items-center">
+        <a href="homepage.html" class="text-gray-700 hover:text-indigo-600 font-medium">Home</a>
+        <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</a>
+        <a href="catalog.html" class="text-gray-700 hover:text-indigo-600 font-medium">Catalog</a>
+        <a href="cart.html" class="text-gray-700 hover:text-indigo-600 font-medium relative">
+            Cart <span id="navCartCount" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </a>
+        <a href="borrowing.html" class="text-gray-700 hover:text-indigo-600 font-medium">Borrowing</a>
+        <a href="members.html" class="text-indigo-600 font-medium">Members</a>
+        <a href="profile.html" class="text-gray-700 hover:text-indigo-600 font-medium">Profile</a>
+        <button id="logoutBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Members Content -->
+  <section class="min-h-screen py-10 bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100 bg-[url('https://images.unsplash.com/photo-1519681393784-d120267933ba?fit=crop&w=1600&h=1000')] bg-cover bg-center bg-fixed page-section">
+    <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+      <h2 class="text-4xl font-bold mb-6 text-indigo-700">Members List 🧑‍🤝‍🧑</h2>
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+        <table class="min-w-full text-left">
+          <thead class="bg-gray-200 text-gray-700">
+            <tr>
+              <th class="p-4">Name</th>
+              <th class="p-4">Email</th>
+              <th class="p-4">Member Since</th>
+            </tr>
+          </thead>
+          <tbody id="memberList">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script src="../script.js"></script>
+</body>
+</html>

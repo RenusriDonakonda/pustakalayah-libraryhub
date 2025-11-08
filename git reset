@@ -1,0 +1,35 @@
+[33mcommit 0811b36bcb9c0330098173346594b72fd89446f8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: vinaybeerpuri <beerpuriv@gmail.com>
+Date:   Sat Nov 8 14:54:45 2025 +0530
+
+    Remove unwanted files: node_modules, data files, uploads, old pages, and Python backend
+
+[33mcommit 5da7dc3989f3f4f28ee6ba7676e6952cd425ed07[m
+Author: vinaybeerpuri <beerpuriv@gmail.com>
+Date:   Sat Nov 8 12:27:47 2025 +0530
+
+    Add email verification system and forgot password flow with OTP
+
+[33mcommit d21e40305aee00d3409d69a9020a0c9c55322511[m
+Author: vinaybeerpuri <beerpuriv@gmail.com>
+Date:   Wed Nov 5 23:23:13 2025 +0530
+
+    Initial commit - HelloWorld Java
+
+[33mcommit 04851b56a790968e736e8d994eae9c05fea363e1[m
+Author: vinaybeerpuri <beerpuriv@gmail.com>
+Date:   Wed Oct 29 22:28:03 2025 +0530
+
+    Initial commit: Pustakalayah LibraryHub
+
+[33mcommit 4dd3f75c3310befec7b335ff35eebbb634681f48[m
+Author: vinaybeerpuri <beerpuriv@gmail.com>
+Date:   Wed Oct 29 08:01:42 2025 +0530
+
+    backend code updated
+
+[33mcommit ae1980035296cf9fa63e8efd61d5cae3838229f2[m
+Author: vinaybeerpuri <beerpuriv@gmail.com>
+Date:   Mon Oct 27 19:03:50 2025 +0530
+
+    Initial commit: Pustakalayah LibraryHub - Complete Library Management System

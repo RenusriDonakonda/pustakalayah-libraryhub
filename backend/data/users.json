@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "$2b$10$rJhPpFZhRtCgLrwb5fQzYOgbPCUCEOANhyJwyzQ89s2xpkZMM4roS",
+    "email": "admin@library.com",
+    "name": "Admin User",
+    "memberSince": "2025-11-05T04:25:39.740Z",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "username": "vinaybeerpuri",
+    "email": "vinaybeerpuri@gmail.com",
+    "password": "vinay799",
+    "name": "vinaybeerpuri",
+    "memberSince": "2025-11-05T04:46:34.171Z",
+    "role": "member"
+  },
+  {
+    "id": 3,
+    "username": "vinay",
+    "email": "vinay799@gmail.com",
+    "password": "vinay799",
+    "name": "vinay",
+    "memberSince": "2025-11-05T04:48:28.978Z",
+    "role": "member"
+  },
+  {
+    "id": 4,
+    "username": "vinaypatel",
+    "email": "vinaypatel@gmail.coom",
+    "password": "$2b$10$A0Z1z0op.WE7NtL6R19CFeKuHyDqygodteGjoYwN5QQC/imMEP0n2",
+    "name": "vinaypatel",
+    "memberSince": "2025-11-07T06:48:45.831Z",
+    "role": "member"
+  },
+  {
+    "id": 5,
+    "username": "vinay.",
+    "email": "beerpuriv@gmail.com",
+    "password": "$2b$10$dVy.2hwbJxn71OHMQBN8BeLNjLwUm/U0XGqzBnFcpa9JfVwAt.qdS",
+    "name": "vinay.",
+    "memberSince": "2025-11-07T07:49:10.696Z",
+    "role": "member",
+    "avatar": "http://localhost:8000/uploads/avatars/1762583381572-20250321_163918-01.jpeg"
+  },
+  {
+    "id": 6,
+    "username": "vinaykumar",
+    "email": "vinaykumar@gmail.com",
+    "password": "$2b$10$FPIhpfQj/oMdufg21foImeT4WWhuy3bbpO1bUZw45KxpK7hANQuOe",
+    "name": "vinaykumar",
+    "memberSince": "2025-11-08T05:58:11.224Z",
+    "role": "member",
+    "avatar": "http://localhost:8000/uploads/avatars/1762583310545-20250321_164200_0_-01.jpeg"
+  }
+]

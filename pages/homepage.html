@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - Pustakalayah LibraryHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="font-sans">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="text-3xl text-indigo-600">📖</div>
+        <span class="text-xl font-bold text-indigo-600">Pustakalayah LibraryHub</span>
+      </div>
+      <div class="space-x-4 flex items-center">
+        <a href="homepage.html" class="text-indigo-600 font-medium">Home</a>
+        <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</a>
+        <a href="catalog.html" class="text-gray-700 hover:text-indigo-600 font-medium">Catalog</a>
+        <a href="cart.html" class="text-gray-700 hover:text-indigo-600 font-medium relative">
+            Cart <span id="navCartCount" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </a>
+        <a href="borrowing.html" class="text-gray-700 hover:text-indigo-600 font-medium">Borrowing</a>
+        <a href="members.html" class="text-gray-700 hover:text-indigo-600 font-medium">Members</a>
+        <a href="profile.html" class="text-gray-700 hover:text-indigo-600 font-medium">Profile</a>
+        <button id="logoutBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Homepage Content -->
+  <section class="min-h-screen bg-[url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?fit=crop&w=1400&h=900')] bg-cover bg-center page-section">
+    <div class="w-full min-h-screen bg-black/70 flex flex-col justify-center items-center text-white text-center px-4">
+      <div class="max-w-4xl">
+        <img src="../logo.jpg" alt="Pustakalayah LibraryHub Logo" class="h-40 w-auto mx-auto mb-6 rounded-2xl shadow-lg">
+        <h1 class="text-6xl font-extrabold mb-6 leading-tight">Welcome to Pustakalayah LibraryHub</h1>
+        <p class="text-2xl mb-8 text-gray-200">Discover a world of knowledge through our vast collection of books</p>
+        <div class="flex flex-wrap gap-6 justify-center mb-12">
+          <div class="bg-white/20 backdrop-blur-sm p-6 rounded-xl border-t-4 border-indigo-400">
+            <h3 class="text-3xl font-bold mb-2">10,000+</h3>
+            <p class="text-gray-200">Books Available</p>
+          </div>
+          <div class="bg-white/20 backdrop-blur-sm p-6 rounded-xl border-t-4 border-indigo-400">
+            <h3 class="text-3xl font-bold mb-2">5+</h3>
+            <p class="text-gray-200">Categories</p>
+          </div>
+          <div class="bg-white/20 backdrop-blur-sm p-6 rounded-xl border-t-4 border-indigo-400">
+            <h3 class="text-3xl font-bold mb-2">24/7</h3>
+            <p class="text-gray-200">Digital Access</p>
+          </div>
+        </div>
+        <a href="catalog.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-xl font-bold shadow-lg transition transform hover:scale-105 inline-block">
+          Explore Our Collection
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <script src="../script.js"></script>
+</body>
+</html>

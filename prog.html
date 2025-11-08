@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pustakalayah LibraryHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom style for active category button in Catalog */
+    .category-btn.active {
+      background-color: #4f46e5; /* indigo-600 */
+      color: white;
+      font-weight: 600;
+    }
+    .category-btn:not(.active) {
+      background-color: white;
+      color: #4f46e5; /* indigo-600 */
+      border: 1px solid #e5e7eb; /* gray-200 */
+    }
+    /* Simple animation for page transitions */
+    .page-section {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="font-sans">
+
+<section id="login" class="min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1568667256549-094345857637?fit=crop&w=1200&h=800')] bg-cover bg-center page-section">
+  <div class="max-w-md w-full bg-white/90 p-10 rounded-2xl shadow-2xl backdrop-blur-md">
+    <div class="flex justify-center mb-6">
+       
+      <div class="flex flex-col items-center mb-6">
+  <img src="./logo.jpg" alt="Pustakalayah LibraryHub Logo" class="h-50 w-auto mb-4 rounded-xl shadow-lg">
+ 
+</div>
+
+    </div>
+    <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">Pustakalayah LibraryHub Login</h2>
+    <form id="loginForm" class="space-y-4">
+      <input type="text" id="username" placeholder="Username" value="admin" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <input type="password" id="password" placeholder="Password" value="admin" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Login</button>
+    </form>
+    <p class="text-red-500 mt-4 hidden" id="loginError">Invalid username or password</p>
+    <p class="mt-4 text-center">Don't have an account? <a href="#" id="showSignup" class="text-indigo-600 font-bold hover:underline">Sign Up</a></p>
+  </div>
+</section>
+
+<section id="signup" class="min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?fit=crop&w=1200&h=800')] bg-cover bg-center hidden page-section">
+  <div class="max-w-md w-full bg-white/90 p-10 rounded-2xl shadow-2xl backdrop-blur-md">
+    <div class="flex justify-center mb-6">
+      <div class="flex flex-col items-center mb-6">
+  <img src="./logo.jpg" alt="Pustakalayah LibraryHub Logo" class="h-50 w-auto mb-4 rounded-xl shadow-lg">
+
+</div>
+
+    </div>
+    <h2 class="text-3xl font-bold mb-6 text-center text-indigo-700">Sign Up for Pustakalayah LibraryHub</h2>
+    <form id="signupForm" class="space-y-4">
+      <input type="text" id="newUsername" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <input type="email" id="email" placeholder="Email" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <input type="password" id="newPassword" placeholder="Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Sign Up</button>
+    </form>
+    <p class="mt-4 text-center">Already have an account? <a href="#" id="showLogin" class="text-indigo-600 font-bold hover:underline">Login</a></p>
+  </div>
+</section>
+
+<div id="mainContent" class="hidden">
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="text-3xl text-indigo-600">📖</div>
+        <span class="text-xl font-bold text-indigo-600">Pustakalayah LibraryHub</span>
+      </div>
+      <div class="space-x-4 flex items-center">
+        <button onclick="showPage('home')" class="text-gray-700 hover:text-indigo-600 font-medium">Home</button>
+        <button onclick="showPage('dashboard')" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</button>
+        <button onclick="showPage('catalog')" class="text-gray-700 hover:text-indigo-600 font-medium">Catalog</button>
+        <button onclick="showPage('cart')" class="text-gray-700 hover:text-indigo-600 font-medium relative">
+            Cart <span id="navCartCount" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </button>
+        <button onclick="showPage('borrowing')" class="text-gray-700 hover:text-indigo-600 font-medium">Borrowing</button>
+        <button onclick="showPage('members')" class="text-gray-700 hover:text-indigo-600 font-medium">Members</button>
+        <button onclick="showPage('profile')" class="text-gray-700 hover:text-indigo-600 font-medium">Profile</button>
+        <button id="logoutBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <section id="home" class="min-h-screen bg-[url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?fit=crop&w=1400&h=900')] bg-cover bg-center page-section">
+    <div class="w-full min-h-screen bg-black/70 flex flex-col justify-center items-center text-white text-center px-4">
+      <div class="max-w-4xl">
+        <img src="./logo.jpg" alt="Pustakalayah LibraryHub Logo" class="h-40 w-auto mx-auto mb-6 rounded-2xl shadow-lg">
+        <h1 class="text-6xl font-extrabold mb-6 leading-tight">Welcome to Pustakalayah LibraryHub</h1>
+        <p class="text-2xl mb-8 text-gray-200">Discover a world of knowledge through our vast collection of books</p>
+        <div class="flex flex-wrap gap-6 justify-center mb-12">
+          <div class="bg-white/20 backdrop-blur-sm p-6 rounded-xl border-t-4 border-indigo-400">
+            <h3 class="text-3xl font-bold mb-2">10,000+</h3>
+            <p class="text-gray-200">Books Available</p>
+          </div>
+          <div class="bg-white/20 backdrop-blur-sm p-6 rounded-xl border-t-4 border-indigo-400">
+            <h3 class="text-3xl font-bold mb-2">5+</h3>
+            <p class="text-gray-200">Categories</p>
+          </div>
+          <div class="bg-white/20 backdrop-blur-sm p-6 rounded-xl border-t-4 border-indigo-400">
+            <h3 class="text-3xl font-bold mb-2">24/7</h3>
+            <p class="text-gray-200">Digital Access</p>
+          </div>
+        </div>
+        <button onclick="showPage('catalog')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg text-xl font-bold shadow-lg transition transform hover:scale-105">
+          Explore Our Collection
+        </button>
+      </div>
+    </div>
+  </section>
+
+<section id="dashboard" class="hidden min-h-screen bg-gray-100 bg-[url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?fit=crop&w=1400&h=500')] bg-cover bg-fixed pt-20 pb-10 page-section">
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-4xl font-extrabold mb-10 text-white drop-shadow-lg p-3 bg-indigo-700/80 rounded-xl inline-block">Dashboard Overview 📊</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white p-8 rounded-xl shadow-2xl border-b-4 border-indigo-500 transform transition hover:scale-[1.02] duration-300">
+        <h3 class="font-bold text-xl mb-2 text-indigo-700 flex items-center gap-2">Total Books <span class="text-2xl">📘</span></h3>
+        <p id="bookCount" class="text-5xl font-extrabold text-indigo-600">1200</p>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-2xl border-b-4 border-green-500 transform transition hover:scale-[1.02] duration-300">
+        <h3 class="font-bold text-xl mb-2 text-green-700 flex items-center gap-2">Active Members <span class="text-2xl">🧑‍🤝‍🧑</span></h3>
+        <p id="memberCount" class="text-5xl font-extrabold text-green-600">350</p>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-2xl border-b-4 border-yellow-500 transform transition hover:scale-[1.02] duration-300">
+        <h3 class="font-bold text-xl mb-2 text-yellow-700 flex items-center gap-2">Books Borrowed <span class="text-2xl">⏳</span></h3>
+        <p id="borrowCount" class="text-5xl font-extrabold text-yellow-600">80</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <section id="catalog" class="hidden min-h-screen bg-gray-50 py-12 bg-[url('https://images.unsplash.com/photo-1532168307077-e070d65b1695?fit=crop&w=1400&h=900')] bg-cover bg-fixed page-section">
+    <div class="max-w-7xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+      <h2 class="text-4xl font-bold mb-8 text-indigo-700 text-center">Book Catalog 📚✨</h2>
+      
+      <div class="flex gap-4 mb-8 overflow-x-auto py-2 px-4 border-b-2 border-indigo-200">
+        <button onclick="filterBooks('all', this)" class="category-btn bg-indigo-600 text-white px-6 py-2 rounded-full font-medium active shadow-md">All Books</button>
+        <button onclick="filterBooks('fiction', this)" class="category-btn bg-white text-indigo-600 px-6 py-2 rounded-full font-medium shadow-md">Fiction</button>
+        <button onclick="filterBooks('action', this)" class="category-btn bg-white text-indigo-600 px-6 py-2 rounded-full font-medium shadow-md">Action</button>
+        <button onclick="filterBooks('romance', this)" class="category-btn bg-white text-indigo-600 px-6 py-2 rounded-full font-medium shadow-md">Romance</button>
+        <button onclick="filterBooks('comic', this)" class="category-btn bg-white text-indigo-600 px-6 py-2 rounded-full font-medium shadow-md">Comics</button>
+        <button onclick="filterBooks('mystery', this)" class="category-btn bg-white text-indigo-600 px-6 py-2 rounded-full font-medium shadow-md">Mystery</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="bookCatalog">
+      </div>
+    </div>
+  </section>
+
+<section id="bookDetails" class="hidden min-h-screen flex items-start justify-center py-10 bg-indigo-50 bg-[url('https://images.unsplash.com/photo-1533660502127-142f1f00889c?fit=crop&w=1200&h=800')] bg-cover bg-fixed page-section">
+  <div class="max-w-3xl w-full mx-auto px-4">
+    <h2 class="text-4xl font-bold mb-6 text-indigo-700 text-center bg-white/90 p-4 rounded-xl shadow-lg">Book Details 📖</h2>
+    <div class="bg-white p-8 rounded-xl shadow-2xl border-t-4 border-indigo-500">
+      <div class="flex flex-col md:flex-row gap-6">
+        <img id="bookImage" src="https://images.unsplash.com/photo-1512820790803-83ca734da794?fit=crop&w=500&h=300" class="w-full md:w-1/3 h-auto object-cover rounded-lg shadow-xl" alt="Book Cover">
+        <div class="md:w-2/3">
+          <h3 id="bookTitle" class="text-3xl font-bold mb-2 text-gray-800">The Great Gatsby</h3>
+          <p id="bookAuthor" class="text-indigo-600 text-xl mb-4 font-semibold">By F. Scott Fitzgerald</p>
+          <p id="bookCategory" class="text-sm text-gray-500 italic mb-4 p-1 bg-gray-100 rounded-md inline-block">Category: Fiction</p>
+          <p id="bookDescription" class="text-gray-700 mb-6 leading-relaxed border-l-4 border-indigo-200 pl-4">
+            A classic story of love and loss set in the Roaring Twenties.
+          </p>
+          <button id="addToCartBtn" class="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-xl hover:bg-indigo-700 transition transform hover:scale-105">
+            Add to Cart 🛒
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="cart" class="hidden min-h-screen py-10 bg-gray-100 bg-[url('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?fit=crop&w=1400&h=900')] bg-cover bg-fixed page-section">
+  <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+    <h2 class="text-4xl font-bold mb-6 text-indigo-700">Your Cart 🛒</h2>
+
+    <div class="flex justify-between items-center mb-6 p-4 bg-indigo-50 rounded-lg shadow-inner">
+      <p class="text-xl font-semibold text-indigo-800">Total Books in Cart: <span id="cartCount" class="text-2xl font-extrabold text-indigo-600">0</span></p>
+      <button onclick="emptyCart()" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition font-semibold shadow-md transform hover:scale-105">Empty Cart 🗑️</button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+      <table class="min-w-full text-left">
+        <thead class="bg-indigo-600 text-white">
+          <tr>
+            <th class="p-4">Book Title</th>
+            <th class="p-4">Author</th>
+            <th class="p-4">Action</th>
+          </tr>
+        </thead>
+        <tbody id="cartItems">
+          </tbody>
+      </table>
+      <p id="emptyCartMessage" class="p-4 text-center text-gray-500 hidden">Your cart is empty. Start exploring the catalog!</p>
+    </div>
+  </div>
+</section>
+
+<section id="borrowing" class="hidden min-h-screen py-10 bg-blue-50 bg-[url('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?fit=crop&w=1400&h=900')] bg-cover bg-fixed page-section">
+  <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+    <h2 class="text-4xl font-bold mb-6 text-indigo-700">Borrowed Books 📚</h2>
+
+    <p class="text-xl font-semibold mb-6 p-4 bg-green-50 rounded-lg shadow-inner text-green-800">
+      Total Borrowed Books: <span id="borrowCountDisplay" class="text-2xl font-extrabold text-green-600">0</span>
+    </p>
+
+    <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+      <table class="min-w-full text-left">
+        <thead class="bg-green-600 text-white">
+          <tr>
+            <th class="p-4">Book Title</th>
+            <th class="p-4">Author</th>
+            <th class="p-4">Action</th>
+          </tr>
+        </thead>
+        <tbody id="borrowList">
+          </tbody>
+      </table>
+      <p id="emptyBorrowMessage" class="p-4 text-center text-gray-500 hidden">You haven't borrowed any books yet. Time to read!</p>
+    </div>
+  </div>
+</section>
+
+  <section id="members" class="hidden min-h-screen py-10 bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100 bg-[url('https://images.unsplash.com/photo-1519681393784-d120267933ba?fit=crop&w=1600&h=1000')] bg-cover bg-center bg-fixed page-section">
+
+    <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+      <h2 class="text-4xl font-bold mb-6 text-indigo-700">Members List 🧑‍🤝‍🧑</h2>
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+        <table class="min-w-full text-left">
+          <thead class="bg-gray-200 text-gray-700">
+            <tr>
+              <th class="p-4">Name</th>
+              <th class="p-4">Email</th>
+              <th class="p-4">Member Since</th>
+            </tr>
+          </thead>
+          <tbody id="memberList">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+ <section id="profile" class="hidden min-h-screen flex items-start justify-center py-10 bg-gradient-to-br from-indigo-50 via-blue-100 to-purple-200 bg-[url('https://images.unsplash.com/photo-1522205411046-284e8a1d1d8b?fit=crop&w=1600&h=1000')] bg-cover bg-center bg-fixed page-section">
+
+  <div class="max-w-md w-full mx-auto p-8 rounded-xl shadow-2xl bg-white/95 border-t-4 border-indigo-500">
+    <h2 class="text-3xl font-bold mb-6 text-indigo-700 text-center">My Profile 👤</h2>
+
+    <div class="flex flex-col items-center mb-6">
+      <img id="profileAvatar" src="https://via.placeholder.com/120" class="w-28 h-28 rounded-full mb-4 border-4 border-indigo-400 shadow-lg object-cover cursor-pointer hover:opacity-80 transition" alt="User Avatar">
+      <input type="file" id="avatarInput" class="hidden" accept="image/*">
+      <button id="changeAvatarBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 hover:scale-105 transition transform shadow-md font-semibold">
+        Change Avatar
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-gray-700 font-semibold mb-1">Name</label>
+        <input type="text" id="profileName" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" readonly>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold mb-1">Email</label>
+        <input type="email" id="profileEmail" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" readonly>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-8">
+      <button id="cancelProfileBtn" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition transform shadow-md hidden font-semibold">Cancel</button>
+      <button id="saveProfileBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition transform shadow-md hidden font-semibold">Save</button>
+      <button id="editProfileBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition transform shadow-md font-semibold">Edit Profile</button>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  // --- INITIAL DATA & STORAGE SETUP ---
+  const defaultUser={username:'admin',password:'admin',email:'admin@library.com',name:'Admin User'};
+  let activeUser = null;
+  
+  if(!localStorage.getItem('users')) localStorage.setItem('users',JSON.stringify([defaultUser]));
+
+  const loginForm=document.getElementById('loginForm');
+  const signupForm=document.getElementById('signupForm');
+  const loginError=document.getElementById('loginError');
+  const mainContent=document.getElementById('mainContent');
+  const loginSection=document.getElementById('login');
+  const signupSection=document.getElementById('signup');
+  const logoutBtn=document.getElementById('logoutBtn');
+  const cartItems=document.getElementById('cartItems');
+  const borrowList=document.getElementById('borrowList');
+  const memberListTable=document.getElementById('memberList');
+
+  // Initializing dynamic arrays from local storage or empty
+  let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  let borrowed = JSON.parse(localStorage.getItem('borrowed') || '[]');
+
+  // --- Utility Functions ---
+  const updateLocalStorage = () => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    localStorage.setItem('borrowed', JSON.stringify(borrowed));
+  };
+  
+  // --- LOGIN/SIGNUP/LOGOUT LOGIC ---
+  loginForm.addEventListener('submit',(e)=>{
+    e.preventDefault();
+    const username=document.getElementById('username').value;
+    const password=document.getElementById('password').value;
+    const users=JSON.parse(localStorage.getItem('users'));
+    const found=users.find(u=>u.username===username && u.password===password);
+    
+    if(found){
+      activeUser = found; // Set active user
+      loginSection.classList.add('hidden');
+      mainContent.classList.remove('hidden');
+      showPage('home');
+      loginError.classList.add('hidden');
+      
+      // Update dynamic content on login
+      renderCart();
+      renderBorrowList();
+      renderMembers();
+      updateProfileFields(activeUser);
+
+    }else{
+      loginError.classList.remove('hidden');
+    }
+  });
+
+  signupForm.addEventListener('submit',(e)=>{
+    e.preventDefault();
+    const newUser={
+        username:document.getElementById('newUsername').value,
+        password:document.getElementById('newPassword').value,
+        email:document.getElementById('email').value,
+        name:document.getElementById('newUsername').value, // Use username as default name
+        memberSince: new Date().toLocaleDateString('en-US')
+    };
+    let users=JSON.parse(localStorage.getItem('users'));
+    if(users.find(u=>u.username===newUser.username)){
+      alert('Username already exists');return;
+    }
+    users.push(newUser);
+    localStorage.setItem('users',JSON.stringify(users));
+    alert('Signup successful! You can login now');
+    document.getElementById('newUsername').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('newPassword').value = '';
+    signupSection.classList.add('hidden');
+    loginSection.classList.remove('hidden');
+  });
+
+  logoutBtn.addEventListener('click',()=>{
+    activeUser = null;
+    mainContent.classList.add('hidden');
+    loginSection.classList.remove('hidden');
+    // Clear login fields for security/convenience
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+  });
+
+  document.getElementById('showSignup').addEventListener('click',()=>{
+    loginSection.classList.add('hidden');
+    signupSection.classList.remove('hidden');
+  });
+
+  document.getElementById('showLogin').addEventListener('click',()=>{
+    signupSection.classList.add('hidden');
+    loginSection.classList.remove('hidden');
+  });
+
+  // --- NAVIGATION LOGIC ---
+  window.showPage=function(id){
+    const pages=['home','dashboard','catalog','bookDetails','borrowing','cart','members','profile'];
+    pages.forEach(p=>{
+      const el=document.getElementById(p);
+      if(el) el.classList.add('hidden');
+    });
+    const current=document.getElementById(id);
+    if(current) {
+        current.classList.remove('hidden');
+        current.classList.add('page-section'); // Add animation class
+    }
+    window.scrollTo(0,0);
+    
+    // Rerender lists when navigating to them
+    if (id === 'cart') renderCart();
+    if (id === 'borrowing') renderBorrowList();
+    if (id === 'members') renderMembers();
+  };
+
+  // --- CATALOG & BOOK DETAILS LOGIC ---
+  window.viewBook=function(title){
+    const book = books.find(b => b.title === title);
+    if (!book) return;
+
+    document.getElementById('bookImage').src = book.image;
+    document.getElementById('bookTitle').textContent = book.title;
+    document.getElementById('bookAuthor').textContent = `By ${book.author}`;
+    document.getElementById('bookDescription').textContent = book.description;
+    document.getElementById('bookCategory').textContent = `Category: ${book.category.charAt(0).toUpperCase() + book.category.slice(1)}`;
+
+    showPage('bookDetails');
+  };
+
+  document.getElementById('addToCartBtn').addEventListener('click',()=>{
+    const title=document.getElementById('bookTitle').textContent;
+    const author=document.getElementById('bookAuthor').textContent.replace('By ','');
+    
+    // Simple check to prevent duplicates
+    if (cart.find(item => item.title === title)) {
+        alert(`${title} is already in your cart!`);
+        return;
+    }
+    
+    cart.push({title,author});
+    updateLocalStorage();
+    renderCart();
+    alert(`${title} added to cart!`);
+  });
+
+  // --- CART & BORROWING LOGIC ---
+  function updateCartCountDisplay(){
+    const count = cart.length;
+    document.getElementById('cartCount').textContent = count;
+    document.getElementById('navCartCount').textContent = count;
+    document.getElementById('navCartCount').classList.toggle('hidden', count === 0);
+    document.getElementById('emptyCartMessage').classList.toggle('hidden', count > 0);
+  }
+
+  function renderCart(){
+    cartItems.innerHTML='';
+    cart.forEach((item,i)=>{
+      cartItems.innerHTML+=`
+        <tr class='border-b hover:bg-gray-50'>
+          <td class='p-4 font-semibold text-gray-800'>${item.title}</td>
+          <td class='p-4 text-gray-600'>${item.author}</td>
+          <td class='p-4'>
+            <button class='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-md' onclick='borrowBook(${i})'>
+              Borrow ✅
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    updateCartCountDisplay();
+  }
+  
+  window.emptyCart = function() {
+    if (confirm('Are you sure you want to empty your cart?')) {
+        cart = [];
+        updateLocalStorage();
+        renderCart();
+        alert('Cart emptied!');
+    }
+  }
+
+  window.borrowBook=function(index){
+    const book = cart[index];
+    
+    // Simple check to prevent duplicates in borrowed list
+    if (borrowed.find(item => item.title === book.title)) {
+        alert(`${book.title} is already borrowed!`);
+        cart.splice(index,1); // Remove from cart if it's somehow there
+    } else {
+        borrowed.push(book);
+        cart.splice(index,1);
+    }
+    
+    updateLocalStorage();
+    renderCart(); // Re-render cart
+    renderBorrowList(); // Re-render borrowed list
+    
+    if (!borrowed.find(item => item.title === book.title)) {
+        alert(`${book.title} borrowed successfully! Happy reading!`);
+    }
+  };
+  
+  function updateBorrowCountDisplay(){
+    const count = borrowed.length;
+    document.getElementById('borrowCountDisplay').textContent = count;
+    document.getElementById('emptyBorrowMessage').classList.toggle('hidden', count > 0);
+  }
+
+  function renderBorrowList(){
+    borrowList.innerHTML='';
+    borrowed.forEach((b,i)=>{
+      borrowList.innerHTML+=`
+        <tr class='border-b hover:bg-gray-50'>
+          <td class='p-4 font-semibold text-gray-800'>${b.title}</td>
+          <td class='p-4 text-gray-600'>${b.author}</td>
+          <td class='p-4'>
+            <button class='bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition shadow-md' onclick='returnBook(${i})'>
+              Return ↩️
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+    updateBorrowCountDisplay();
+  }
+
+  window.returnBook=function(i){
+    const title = borrowed[i].title;
+    borrowed.splice(i,1);
+    updateLocalStorage();
+    renderBorrowList();
+    alert(`${title} returned successfully! Thank you.`);
+  };
+
+  // --- MEMBERS LOGIC ---
+  function renderMembers() {
+    memberListTable.innerHTML = '';
+    const users = JSON.parse(localStorage.getItem('users'));
+    
+    users.forEach(user => {
+      // Use the stored 'name' if available, otherwise default to username
+      const nameToDisplay = user.name || user.username;
+      const memberSince = user.memberSince || 'N/A';
+      
+      memberListTable.innerHTML += `
+        <tr class='border-b hover:bg-gray-50'>
+          <td class='p-4 font-semibold text-gray-800'>${nameToDisplay}</td>
+          <td class='p-4 text-gray-600'>${user.email}</td>
+          <td class='p-4 text-gray-500'>${memberSince}</td>
+        </tr>
+      `;
+    });
+  }
+
+  // --- PROFILE LOGIC ---
+  const profileNameInput = document.getElementById('profileName');
+  const profileEmailInput = document.getElementById('profileEmail');
+  const editProfileBtn = document.getElementById('editProfileBtn');
+  const saveProfileBtn = document.getElementById('saveProfileBtn');
+  const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+  const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+  const profileAvatar = document.getElementById('profileAvatar');
+  
+  let originalProfile = {};
+
+  function updateProfileFields(user) {
+    profileNameInput.value = user.name || user.username;
+    profileEmailInput.value = user.email;
+    originalProfile = { name: profileNameInput.value, email: profileEmailInput.value };
+  }
+
+  function toggleEditMode(isEditing) {
+    profileNameInput.readOnly = !isEditing;
+    profileEmailInput.readOnly = !isEditing;
+    profileNameInput.classList.toggle('bg-white', isEditing);
+    profileEmailInput.classList.toggle('bg-white', isEditing);
+    profileNameInput.classList.toggle('bg-gray-50', !isEditing);
+    profileEmailInput.classList.toggle('bg-gray-50', !isEditing);
+    
+    editProfileBtn.classList.toggle('hidden', isEditing);
+    saveProfileBtn.classList.toggle('hidden', !isEditing);
+    cancelProfileBtn.classList.toggle('hidden', !isEditing);
+    changeAvatarBtn.disabled = !isEditing;
+  }
+  
+  editProfileBtn.addEventListener('click', () => {
+    originalProfile = { name: profileNameInput.value, email: profileEmailInput.value };
+    toggleEditMode(true);
+  });
+
+  cancelProfileBtn.addEventListener('click', () => {
+    profileNameInput.value = originalProfile.name;
+    profileEmailInput.value = originalProfile.email;
+    toggleEditMode(false);
+  });
+  
+  saveProfileBtn.addEventListener('click', () => {
+    if (!activeUser) return;
+    
+    const newName = profileNameInput.value.trim();
+    const newEmail = profileEmailInput.value.trim();
+    
+    if (!newName || !newEmail) {
+        alert('Name and Email cannot be empty.');
+        return;
+    }
+    
+    // Update the active user object
+    activeUser.name = newName;
+    activeUser.email = newEmail;
+    
+    // Update local storage for persistence
+    let users = JSON.parse(localStorage.getItem('users'));
+    const userIndex = users.findIndex(u => u.username === activeUser.username);
+    if (userIndex !== -1) {
+        users[userIndex] = activeUser;
+        localStorage.setItem('users', JSON.stringify(users));
+        alert('Profile updated successfully!');
+        toggleEditMode(false);
+        renderMembers(); // Re-render member list to reflect change
+    }
+  });
+  
+  // Simulated avatar change functionality
+  changeAvatarBtn.addEventListener('click', () => {
+    const randomSeed = Math.floor(Math.random() * 1000);
+    // Using a different placeholder service for variety
+    profileAvatar.src = `https://picsum.photos/seed/${randomSeed}/120/120`; 
+    alert('Avatar updated! (Simulated)');
+  });
+
+
+  // --- BOOK CATALOG DATA & RENDERING ---
+  const books = [
+    {
+      title: "The Lost City",
+      author: "Sarah Mitchell",
+      category: "fiction",
+      image: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600",
+      description: "A thrilling tale of discovery and adventure in an ancient civilization."
+    },
+    {
+      title: "Midnight Chase",
+      author: "James Anderson",
+      category: "action",
+      image: "https://images.unsplash.com/photo-1589998059171-988d887df646?fit=crop&w=400&h=600",
+      description: "High-stakes pursuit through the dark streets of London."
+    },
+    {
+      title: "Love in Paris",
+      author: "Emily Roberts",
+      category: "romance",
+      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?fit=crop&w=400&h=600",
+      description: "A romantic journey through the city of love."
+    },
+    {
+      title: "Superhero Chronicles",
+      author: "Mike Turner",
+      category: "comic",
+      image: "https://images.unsplash.com/photo-1608889476518-738c9b1dcb40?fit=crop&w=400&h=600",
+      description: "Action-packed adventures of modern-day heroes."
+    },
+    {
+      title: "The Silent Witness",
+      author: "Patricia Blake",
+      category: "mystery",
+      image: "https://images.unsplash.com/photo-1587876931567-564ce588bfbd?fit=crop&w=400&h=600",
+      description: "A gripping mystery that will keep you guessing until the end."
+    },
+    {
+      title: "Dragon's Rise",
+      author: "Robert King",
+      category: "fiction",
+      image: "https://m.media-amazon.com/images/I/71zr12FF4kL._AC_UF1000,1000_QL80_.jpg",
+      description: "Epic fantasy tale of dragons and magic."
+    },
+    {
+      title: "Urban Warriors",
+      author: "David Chen",
+      category: "action",
+      image: "https://m.media-amazon.com/images/I/81qBSSkGfvL._UF1000,1000_QL80_.jpg",
+      description: "Modern martial arts action in the concrete jungle."
+    },
+    {
+      title: "Sunset Dreams",
+      author: "Sofia Garcia",
+      category: "romance",
+      image: "https://m.media-amazon.com/images/I/71iLEh7q--L._UF1000,1000_QL80_.jpg",
+      description: "A beautiful story of summer love and new beginnings."
+    },
+    {
+      title: "Mystery Manor",
+      author: "Thomas Wright",
+      category: "mystery",
+      image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?fit=crop&w=400&h=600",
+      description: "Strange occurrences in an old English manor."
+    },
+    {
+      title: "Hero Academy",
+      author: "Lisa Chang",
+      category: "comic",
+      image: "https://images.unsplash.com/photo-1608889476518-738c9b1dcb40?fit=crop&w=400&h=600",
+      description: "Young heroes learning to master their powers."
+    }
+  ];
+
+  // Function to render books
+  function renderBooks(category = 'all') {
+    const bookCatalog = document.getElementById('bookCatalog');
+    bookCatalog.innerHTML = '';
+    
+    const filteredBooks = category === 'all' 
+      ? books 
+      : books.filter(book => book.category === category);
+
+    filteredBooks.forEach(book => {
+      const bookCard = `
+        <div class="bg-white p-6 rounded-xl shadow-lg transform transition duration-300 hover:scale-105 border-t-4 border-indigo-200">
+          <img src="${book.image}" alt="${book.title}" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
+          <div class="space-y-2">
+            <h3 class="font-bold text-xl text-gray-800">${book.title}</h3>
+            <p class="text-gray-600">${book.author}</p>
+            <p class="text-sm text-indigo-500 italic font-medium">${book.category.charAt(0).toUpperCase() + book.category.slice(1)}</p>
+            <p class="text-sm text-gray-700 line-clamp-2">${book.description}</p>
+            <button class="mt-3 w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md" 
+              onclick="viewBook('${book.title}')">View Details</button>
+          </div>
+        </div>
+      `;
+      bookCatalog.innerHTML += bookCard;
+    });
+  }
+
+  // Function to filter books by category
+  window.filterBooks = function(category, clickedButton) {
+    // Update active category button class
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    clickedButton.classList.add('active');
+    
+    renderBooks(category);
+  };
+
+  // Initial render of all books and cart/borrow lists
+  renderBooks();
+  renderCart();
+  renderBorrowList();
+});
+</script>
+
+</body>
+</html>

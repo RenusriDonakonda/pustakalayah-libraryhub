@@ -1,7 +1,6 @@
 # Dependencies
 node_modules/
 backend/node_modules/
-backend_py/.venv/
 
 # Environment variables
 .env
@@ -17,16 +16,6 @@ yarn-error.log*
 # Uploads (user-generated content)
 backend/uploads/
 uploads/
-
-# Data files (user data, should not be in version control)
-backend/data/users.json
-backend/data/books.json
-backend/data/borrowing.json
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
 
 # OS files
 .DS_Store
@@ -46,17 +35,4 @@ build/
 # Temporary files
 *.tmp
 *.temp
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-
-# Old/unused files
-pages/
-prog.html
-git
-backend_py/
 

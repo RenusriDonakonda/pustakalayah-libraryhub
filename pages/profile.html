@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Pustakalayah LibraryHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="font-sans">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="text-3xl text-indigo-600">📖</div>
+        <span class="text-xl font-bold text-indigo-600">Pustakalayah LibraryHub</span>
+      </div>
+      <div class="space-x-4 flex items-center">
+        <a href="homepage.html" class="text-gray-700 hover:text-indigo-600 font-medium">Home</a>
+        <a href="dashboard.html" class="text-gray-700 hover:text-indigo-600 font-medium">Dashboard</a>
+        <a href="catalog.html" class="text-gray-700 hover:text-indigo-600 font-medium">Catalog</a>
+        <a href="cart.html" class="text-gray-700 hover:text-indigo-600 font-medium relative">
+            Cart <span id="navCartCount" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </a>
+        <a href="borrowing.html" class="text-gray-700 hover:text-indigo-600 font-medium">Borrowing</a>
+        <a href="members.html" class="text-gray-700 hover:text-indigo-600 font-medium">Members</a>
+        <a href="profile.html" class="text-indigo-600 font-medium">Profile</a>
+        <button id="logoutBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Profile Content -->
+  <section class="min-h-screen flex items-start justify-center py-10 bg-gradient-to-br from-indigo-50 via-blue-100 to-purple-200 bg-[url('https://images.unsplash.com/photo-1522205411046-284e8a1d1d8b?fit=crop&w=1600&h=1000')] bg-cover bg-center bg-fixed page-section">
+    <div class="max-w-md w-full mx-auto p-8 rounded-xl shadow-2xl bg-white/95 border-t-4 border-indigo-500">
+      <h2 class="text-3xl font-bold mb-6 text-indigo-700 text-center">My Profile 👤</h2>
+
+    <div class="flex flex-col items-center mb-6">
+  <img id="profileAvatar" src="assets/avatars/avatar1.svg" class="w-28 h-28 rounded-full mb-4 border-4 border-indigo-400 shadow-lg object-cover cursor-pointer hover:opacity-80 transition" alt="User Avatar">
+        <input type="file" id="avatarInput" class="hidden" accept="image/*">
+        <button id="changeAvatarBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 hover:scale-105 transition transform shadow-md font-semibold">
+          Change Avatar
+        </button>
+        <button id="chooseFromGalleryBtn" class="mt-2 text-sm text-indigo-600 hover:underline">Choose from gallery</button>
+        <!-- Avatar gallery modal -->
+        <div id="avatarGalleryOverlay" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+          <div class="bg-white rounded-xl p-6 w-11/12 max-w-3xl shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Choose an avatar</h3>
+              <button id="closeAvatarGallery" class="text-gray-600 hover:text-gray-800">Close ✖</button>
+            </div>
+            <div id="avatarGallery" class="grid grid-cols-4 gap-4">
+              <!-- avatars inserted dynamically -->
+            </div>
+            <div class="mt-4 text-right">
+              <button id="uploadAvatarBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Upload custom</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-gray-700 font-semibold mb-1">Name</label>
+          <input type="text" id="profileName" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" readonly>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-semibold mb-1">Email</label>
+          <input type="email" id="profileEmail" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" readonly>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 mt-8">
+        <button id="cancelProfileBtn" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition transform shadow-md hidden font-semibold">Cancel</button>
+        <button id="saveProfileBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition transform shadow-md hidden font-semibold">Save</button>
+        <button id="editProfileBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition transform shadow-md font-semibold">Edit Profile</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="../script.js"></script>
+</body>
+</html>
