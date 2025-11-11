@@ -70,26 +70,26 @@ async function api(path, options = {}) {
       const users = loadDemoUsers();
       if (users.find(u => u.username === username)) throw new Error('Username already exists');
       if (users.find(u => u.email === email)) throw new Error('Email already exists');
-      
+
       // Get pending avatar if exists
       const pendingAvatar = localStorage.getItem('pendingAvatarFile') || localStorage.getItem('pendingAvatarChoice');
-      
-      const newUser = { 
-        id: Date.now(), 
-        username, 
-        email, 
+
+      const newUser = {
+        id: Date.now(),
+        username,
+        email,
         password,
         avatar: pendingAvatar || avatar || null,
-        role: 'member', 
-        member_since: new Date().toISOString() 
+        role: 'member',
+        member_since: new Date().toISOString()
       };
-      users.push(newUser); 
+      users.push(newUser);
       saveDemoUsers(users);
-      
+
       // Clear pending avatars after successful registration
       localStorage.removeItem('pendingAvatarFile');
       localStorage.removeItem('pendingAvatarChoice');
-      
+
       const { password: _, ...userWithoutPassword } = newUser;
       return { success: true, user: userWithoutPassword, token: 'demo-token-' + Date.now() };
     }
@@ -97,19 +97,19 @@ async function api(path, options = {}) {
     if (path.includes('/api/users') && method === 'GET') {
       return loadDemoUsers().map(u => { const { password, ...rest } = u; return rest; });
     }
-    
+
     if (path.match(/\/api\/users\/\d+\/avatar/) && method === 'POST') {
       const userId = path.match(/\/api\/users\/(\d+)\/avatar/)[1];
       const { avatarUrl } = body || {};
       if (!avatarUrl) throw new Error('Avatar URL is required');
-      
+
       const users = loadDemoUsers();
       const userIndex = users.findIndex(u => u.id === parseInt(userId));
       if (userIndex === -1) throw new Error('User not found');
-      
+
       users[userIndex].avatar = avatarUrl;
       saveDemoUsers(users);
-      
+
       const user = users[userIndex];
       const { password: _, ...userWithoutPassword } = user;
       return { user: userWithoutPassword };
@@ -175,13 +175,24 @@ async function api(path, options = {}) {
     const token = localStorage.getItem('token');
     const url = buildUrl(path);
     console.debug('api -> fetch', { url });
+    let headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) , ...(options.headers || {}) };
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) , ...(options.headers || {}) },
+      headers,
       ...options
     });
     if (!res.ok) {
       let data; try { data = await res.json(); } catch(e) { throw new Error('Request failed'); }
-      throw new Error(data.error || data.detail || JSON.stringify(data));
+      let errorMsg = data.error;
+      if (!errorMsg && data.detail) {
+        if (typeof data.detail === 'string') errorMsg = data.detail;
+        else if (Array.isArray(data.detail)) errorMsg = data.detail.map(d => d.msg || d.message || JSON.stringify(d)).join(', ');
+        else errorMsg = JSON.stringify(data.detail);
+      }
+      if (!errorMsg) errorMsg = JSON.stringify(data);
+      throw new Error(errorMsg);
     }
     try { return await res.json(); } catch { return null; }
   } catch (err) {
@@ -270,9 +281,14 @@ window.addEventListener('DOMContentLoaded', () => {
     // Clear the image first to force refresh and avoid showing wrong avatar
     if (profileAvatar) {
       if (user.avatar) {
+        // Build full URL for avatar if it's a relative path
+        let avatarUrl = user.avatar;
+        if (avatarUrl.startsWith('/uploads/')) {
+          avatarUrl = buildUrl(avatarUrl);
+        }
         // Add cache-busting parameter to force browser to reload the image
-        const separator = user.avatar.includes('?') ? '&' : '?';
-        profileAvatar.src = user.avatar + separator + '_t=' + Date.now();
+        const separator = avatarUrl.includes('?') ? '&' : '?';
+        profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
       } else {
         // Reset to default if no avatar
         profileAvatar.src = profileAvatar.src.split('?')[0].split('&')[0]; // Clear any cache params
@@ -303,22 +319,7 @@ window.addEventListener('DOMContentLoaded', () => {
     return new Blob([u8arr], { type: mime });
   }
 
-  // Hash a password using SHA-256 and return hex string
-  async function hashPassword(password) {
-    if (!password) return '';
-    try {
-      const enc = new TextEncoder();
-      const data = enc.encode(password);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return hashHex;
-    } catch (err) {
-      // In case crypto.subtle not available, fallback to sending plaintext (not ideal)
-      console.warn('Web Crypto unavailable, sending plaintext password');
-      return password;
-    }
-  }
+
 
   // Resize an image File to a max dimension and return a dataURL
   function resizeImageFile(file, maxDim = 512, mime = 'image/jpeg', quality = 0.85) {
@@ -373,33 +374,62 @@ window.addEventListener('DOMContentLoaded', () => {
   async function handleAvatarFile(file) {
     if (!file) return;
     try {
+      console.log('handleAvatarFile: Processing file', file.name);
       const resizedDataUrl = await resizeImageFile(file, 512, 'image/jpeg', 0.85);
       profileAvatar.src = resizedDataUrl;
 
       const user = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('handleAvatarFile: Current user', user);
+      
       if (user && user.id) {
         // Upload resized image as multipart to backend
         const blob = dataURLtoBlob(resizedDataUrl);
         const form = new FormData();
         form.append('avatar', blob, file.name || `avatar-${Date.now()}.jpg`);
         const token = localStorage.getItem('token');
-        const res = await fetch(buildUrl(`/api/users/${user.id}/avatar`), { method: 'POST', body: form, headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+        
+        console.log('handleAvatarFile: Uploading to backend with token:', token ? 'Present' : 'Missing');
+        
+        const res = await fetch(buildUrl(`/api/users/me/avatar`), { 
+          method: 'POST', 
+          body: form, 
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } 
+        });
+        
+        console.log('handleAvatarFile: Response status', res.status);
+        
         if (res.ok) {
           const updated = await res.json();
+          console.log('handleAvatarFile: Avatar uploaded successfully', updated);
+          
           activeUser = updated;
           try { localStorage.setItem('user', JSON.stringify(activeUser)); } catch (e) {}
+          
           // Update avatar from backend response (user-specific) with cache-busting
           if (updated.avatar) {
-            const separator = updated.avatar.includes('?') ? '&' : '?';
-            profileAvatar.src = updated.avatar + separator + '_t=' + Date.now();
+            let avatarUrl = updated.avatar;
+            if (avatarUrl.startsWith('/uploads/')) {
+              avatarUrl = buildUrl(avatarUrl);
+            }
+            const separator = avatarUrl.includes('?') ? '&' : '?';
+            profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
+            console.log('handleAvatarFile: Avatar URL updated to', avatarUrl);
           }
+          
+          alert('Avatar updated successfully!');
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.error('handleAvatarFile: Upload failed', res.status, errorData);
+          alert('Failed to upload avatar: ' + (errorData.detail || 'Unknown error'));
         }
       } else {
         // Not logged in: save the resized data URL and apply on next login
+        console.log('handleAvatarFile: User not logged in, saving for later');
         try { localStorage.setItem('pendingAvatarFile', resizedDataUrl); } catch (e) { /* ignore */ }
       }
     } catch (err) {
-      console.warn('Failed to process avatar image', err);
+      console.error('handleAvatarFile: Error processing avatar', err);
+      alert('Failed to process avatar: ' + err.message);
     }
   }
 
@@ -454,17 +484,20 @@ window.addEventListener('DOMContentLoaded', () => {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     if (loginError) loginError.classList.add('hidden');
-    
+
     // Hide any verification message
     const verificationMessage = document.getElementById('verificationMessage');
     const resendVerificationBtn = document.getElementById('resendVerificationBtn');
     if (verificationMessage) verificationMessage.classList.add('hidden');
     if (resendVerificationBtn) resendVerificationBtn.classList.add('hidden');
-    
+
     try {
-      // Hash password client-side for extra protection in transit
-      const hashed = await hashPassword(password);
-      const res = await api('/api/users/login', { method: 'POST', body: JSON.stringify({ username, password: hashed }) });
+      // Send as FormData to match backend expectations
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      const res = await api('/api/users/login', { method: 'POST', body: formData });
       if (res && res.token) {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
@@ -479,7 +512,7 @@ window.addEventListener('DOMContentLoaded', () => {
           loginError.textContent = err.message;
           loginError.classList.remove('hidden');
         }
-        
+
         // Show verification message and resend button
         if (verificationMessage) {
           verificationMessage.textContent = 'Please verify your email before logging in.';
@@ -491,9 +524,9 @@ window.addEventListener('DOMContentLoaded', () => {
           resendVerificationBtn.dataset.username = username;
         }
       } else {
-        if (loginError) { 
-          loginError.textContent = err.message || 'Login failed'; 
-          loginError.classList.remove('hidden'); 
+        if (loginError) {
+          loginError.textContent = err.message || 'Login failed';
+          loginError.classList.remove('hidden');
         }
       }
     }
@@ -505,27 +538,36 @@ window.addEventListener('DOMContentLoaded', () => {
     const usernameEl = document.getElementById('newUsername');
     const emailEl = document.getElementById('email');
     const passwordEl = document.getElementById('newPassword');
+    const mobileEl = document.getElementById('mobile');
     const username = usernameEl.value.trim();
     const email = (emailEl && emailEl.value || '').trim();
     const password = passwordEl && passwordEl.value;
+    const mobile = mobileEl ? mobileEl.value.trim() : '';
     const usernameError = document.getElementById('usernameError');
     const emailError = document.getElementById('emailError');
     const passwordError = document.getElementById('passwordError');
+    const mobileError = document.getElementById('mobileError');
     const signupError = document.getElementById('signupError');
     const signupSpinner = document.getElementById('signupSpinner');
     // clear errors
-    [usernameError, emailError, passwordError, signupError].forEach(el => { if (el) el.classList.add('hidden'); el && (el.textContent = ''); });
+    [usernameError, emailError, passwordError, mobileError, signupError].forEach(el => { if (el) el.classList.add('hidden'); el && (el.textContent = ''); });
 
-  // Basic client-side validation with stronger password rules
+  // Basic client-side validation with relaxed password rules
   let hasErr = false;
   if (!username) { usernameError && (usernameError.textContent = 'Please enter a username'); usernameError && usernameError.classList.remove('hidden'); hasErr = true; }
   if (!email || !email.includes('@') || email.length < 6) { emailError && (emailError.textContent = 'Please enter a valid email'); emailError && emailError.classList.remove('hidden'); hasErr = true; }
-  // Stronger password rules: min 8, upper, lower, digit, special
-  const pwdRules = [/.{8,}/, /[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/];
-  const pwdMsgs = ['at least 8 characters', 'a lowercase letter', 'an uppercase letter', 'a number', 'a special character'];
-  const failed = pwdRules.map((r,i)=>r.test(password)?null:pwdMsgs[i]).filter(Boolean);
-  if (failed.length) { passwordError && (passwordError.textContent = 'Password must contain ' + failed.join(', ')); passwordError && passwordError.classList.remove('hidden'); hasErr = true; }
-    if (hasErr) return;
+  // Relaxed password rules: min 6 characters
+  if (!password || password.length < 6) { 
+    passwordError && (passwordError.textContent = 'Password must be at least 6 characters'); 
+    passwordError && passwordError.classList.remove('hidden'); 
+    hasErr = true; 
+  }
+  if (!mobile || mobile.length < 10) { 
+    mobileError && (mobileError.textContent = 'Please enter a valid 10-digit mobile number'); 
+    mobileError && mobileError.classList.remove('hidden'); 
+    hasErr = true; 
+  }
+  if (hasErr) return;
 
     try {
       signupSpinner && signupSpinner.classList.remove('hidden');
@@ -542,57 +584,48 @@ window.addEventListener('DOMContentLoaded', () => {
         } catch (e) { throw e; }
       }
 
-      // Hash the password client-side before sending
-      const hashed = await hashPassword(password);
-
       // Get mobile number if available
       const mobileEl = document.getElementById('mobile');
       const mobile = mobileEl ? mobileEl.value.trim() : '';
+
+      // Call register endpoint (backend will hash the password)
+      // Send as FormData to match backend expectations
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('email', email);
+      formData.append('password', password);
+      if (mobile) formData.append('mobile', mobile);
       
-      // Call register endpoint
-      const reg = await api('/api/users/register', { method: 'POST', body: JSON.stringify({ username, email, password: hashed, mobile }) });
+      // Add avatar if uploaded
+      const signupAvatarInput = document.getElementById('signupAvatarInput');
+      if (signupAvatarInput && signupAvatarInput.files && signupAvatarInput.files[0]) {
+        formData.append('avatar', signupAvatarInput.files[0]);
+      }
       
-      // Registration successful - show verification message
-      if (reg && reg.success) {
-        let message = reg.message || 'Registration successful! Please check your email to verify your account.';
+      const reg = await api('/api/users/register', { method: 'POST', body: formData });
+      
+      // Registration successful - auto login with returned token
+      if (reg && reg.success && reg.token) {
+        alert(reg.message || 'Registration successful! You are now logged in.');
         
-        // In development mode, show verification link
-        if (reg.verificationUrl) {
-          message += `\n\nDevelopment Mode - Verification Link:\n${reg.verificationUrl}`;
-          alert(message);
-          // Also log to console for easy copy
-          console.log('Email Verification Link:', reg.verificationUrl);
-        } else {
-          alert(message);
-        }
+        // Store token and user
+        localStorage.setItem('token', reg.token);
+        localStorage.setItem('user', JSON.stringify(reg.user));
         
-        // Clear form and redirect to login
+        // Clear form
         if (usernameEl) usernameEl.value = '';
         if (emailEl) emailEl.value = '';
         if (passwordEl) passwordEl.value = '';
         if (mobileEl) mobileEl.value = '';
         
-        // Show login page
-        if (signupSection) signupSection.classList.add('hidden');
-        if (loginSection) loginSection.classList.remove('hidden');
+        // Redirect to homepage or dashboard
+        window.location.href = 'homepage.html';
         return;
       }
       
-      // Legacy fallback: try auto-login (shouldn't happen with email verification)
-      try {
-        const loginRes = await api('/api/users/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-        if (loginRes && loginRes.token) {
-          localStorage.setItem('token', loginRes.token);
-          localStorage.setItem('user', JSON.stringify(loginRes.user));
-          showMainForUser(loginRes.user);
-          return;
-        }
-      } catch (loginErr) {
-        // ignore auto-login failure; fall back to redirect to login page
-        console.debug('Auto-login after register failed', loginErr);
-      }
-      // fallback: go to login page so user can sign in
-      navigateTo('login.html');
+      // Fallback: redirect to login page
+      alert('Registration successful! Please login.');
+      window.location.href = 'login.html';
     } catch (err) {
       signupSpinner && signupSpinner.classList.add('hidden');
       const signupError = document.getElementById('signupError');
@@ -631,8 +664,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 try { localStorage.setItem('user', JSON.stringify(activeUser)); } catch (e) {}
                 // Update avatar from backend response (user-specific) with cache-busting
                 if (updated.avatar) {
-                  const separator = updated.avatar.includes('?') ? '&' : '?';
-                  profileAvatar.src = updated.avatar + separator + '_t=' + Date.now();
+                  let avatarUrl = updated.avatar;
+                  if (avatarUrl.startsWith('/uploads/')) {
+                    avatarUrl = buildUrl(avatarUrl);
+                  }
+                  const separator = avatarUrl.includes('?') ? '&' : '?';
+                  profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
                 }
               }
             } else {
@@ -655,6 +692,26 @@ window.addEventListener('DOMContentLoaded', () => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     await handleAvatarFile(file);
+  });
+
+  // Signup avatar preview handler
+  const signupAvatarInput = document.getElementById('signupAvatarInput');
+  const signupAvatarImage = document.getElementById('signupAvatarImage');
+  const signupAvatarInitials = document.getElementById('signupAvatarInitials');
+  
+  signupAvatarInput?.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (signupAvatarImage && signupAvatarInitials) {
+        signupAvatarImage.src = event.target.result;
+        signupAvatarImage.classList.remove('hidden');
+        signupAvatarInitials.classList.add('hidden');
+      }
+    };
+    reader.readAsDataURL(file);
   });
 
   // Initial UI state: show login, hide main content
@@ -883,363 +940,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-//             </button>
-//           </td>
-//         </tr>
-//       `;
-//     });
-//     updateCartCountDisplay();
-//   }
 
-//   function updateBorrowCountDisplay() {
-//     const countEl = document.getElementById('borrowCountDisplay');
-//     const emptyMsg = document.getElementById('emptyBorrowMessage');
-//     if (countEl) countEl.textContent = (borrowRecords || []).length;
-//     if (emptyMsg) emptyMsg.classList.toggle('hidden', (borrowRecords || []).length > 0);
-//   }
-
-//   function renderBorrowList() {
-//     if (!borrowList) return;
-//     borrowList.innerHTML = '';
-//     borrowRecords.forEach((b) => {
-//       borrowList.innerHTML += `
-//         <tr class='border-b hover:bg-gray-50'>
-//           <td class='p-4 font-semibold text-gray-800'>${b.book_title}</td>
-//           <td class='p-4 text-gray-600'>${b.book_author}</td>
-//           <td class='p-4'>
-//             <button class='bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition shadow-md' onclick='returnBook(${b.id})'>
-//               Return ↩️
-//             </button>
-//           </td>
-//         </tr>
-//       `;
-//     });
-//     updateBorrowCountDisplay();
-//   }
-
-//   function updateProfileFields(user) {
-//     if (!user) return;
-//     profileNameInput.value = user.name || user.username;
-//     profileEmailInput.value = user.email;
-//     originalProfile = { name: profileNameInput.value, email: profileEmailInput.value };
-//   }
-
-//   function toggleEditMode(isEditing) {
-//     profileNameInput.readOnly = !isEditing;
-//     profileEmailInput.readOnly = !isEditing;
-//     profileNameInput.classList.toggle('bg-white', isEditing);
-//     profileEmailInput.classList.toggle('bg-white', isEditing);
-//     profileNameInput.classList.toggle('bg-gray-50', !isEditing);
-//     profileEmailInput.classList.toggle('bg-gray-50', !isEditing);
-
-//     editProfileBtn.classList.toggle('hidden', isEditing);
-//     saveProfileBtn.classList.toggle('hidden', !isEditing);
-//     cancelProfileBtn.classList.toggle('hidden', !isEditing);
-//     changeAvatarBtn.disabled = !isEditing;
-//   }
-
-//   // --- NAVIGATION LOGIC ---
-//   window.showPage = function (id) {
-//     const pages = ['home', 'dashboard', 'catalog', 'bookDetails', 'borrowing', 'cart', 'members', 'profile'];
-//     pages.forEach(p => {
-//       const el = document.getElementById(p);
-//       if (el) el.classList.add('hidden');
-//     });
-//     const current = document.getElementById(id);
-//     if (current) {
-//       current.classList.remove('hidden');
-//       current.classList.add('page-section');
-//     }
-//     window.scrollTo(0, 0);
-
-//     if (id === 'cart') renderCart();
-//     if (id === 'borrowing') renderBorrowList();
-//     if (id === 'members') loadMembers();
-//   };
-
-//   // --- AUTH ---
-//   loginForm?.addEventListener('submit', async (e) => {
-//     e.preventDefault();
-//     const username = document.getElementById('username').value.trim();
-//     const password = document.getElementById('password').value.trim();
-//     try {
-//       const user = await api('/api/users/login', {
-//         method: 'POST',
-//         body: JSON.stringify({ username, password })
-//       });
-//       activeUser = user;
-//       loginSection.classList.add('hidden');
-//       mainContent.classList.remove('hidden');
-//       showPage('home');
-//       loginError.classList.add('hidden');
-
-//       await loadBooks();
-//       await loadBorrowRecords();
-//       renderCart();
-//       renderBorrowList();
-//       await loadMembers();
-//       updateProfileFields(activeUser);
-//     } catch (err) {
-//       loginError.classList.remove('hidden');
-//     }
-//   });
-
-//   signupForm?.addEventListener('submit', async (e) => {
-//     e.preventDefault();
-//     const payload = {
-//       username: document.getElementById('newUsername').value.trim(),
-//       password: document.getElementById('newPassword').value.trim(),
-//       email: document.getElementById('email').value.trim(),
-//       name: document.getElementById('newUsername').value.trim(),
-//     };
-//     try {
-//       await api('/api/users', { method: 'POST', body: JSON.stringify(payload) });
-//       alert('Signup successful! You can login now');
-//       document.getElementById('newUsername').value = '';
-//       document.getElementById('email').value = '';
-//       document.getElementById('newPassword').value = '';
-//       signupSection.classList.add('hidden');
-//       loginSection.classList.remove('hidden');
-//     } catch (err) {
-//       alert((err && err.message) || 'Signup failed');
-//     }
-//   });
-
-//   logoutBtn?.addEventListener('click', () => {
-//     activeUser = null;
-//     mainContent.classList.add('hidden');
-//     loginSection.classList.remove('hidden');
-//     document.getElementById('username').value = '';
-//     document.getElementById('password').value = '';
-//   });
-
-//   document.getElementById('showSignup')?.addEventListener('click', () => {
-//     loginSection.classList.add('hidden');
-//     signupSection.classList.remove('hidden');
-//   });
-
-//   document.getElementById('showLogin')?.addEventListener('click', () => {
-//     signupSection.classList.add('hidden');
-//     loginSection.classList.remove('hidden');
-//   });
-
-//   // --- CATALOG & BOOK DETAILS ---
-//   window.viewBook = function (title) {
-//     const book = books.find(b => b.title === title);
-//     if (!book) return;
-
-//     document.getElementById('bookImage').src = book.image || '';
-//     document.getElementById('bookTitle').textContent = book.title;
-//     document.getElementById('bookAuthor').textContent = `By ${book.author}`;
-//     document.getElementById('bookDescription').textContent = book.description || '';
-//     document.getElementById('bookCategory').textContent = `Category: ${book.category.charAt(0).toUpperCase() + book.category.slice(1)}`;
-
-//     showPage('bookDetails');
-//   };
-
-//   const addToCartBtn = document.getElementById('addToCartBtn');
-//   addToCartBtn?.addEventListener('click', () => {
-//     const title = document.getElementById('bookTitle').textContent;
-//     const author = document.getElementById('bookAuthor').textContent.replace('By ', '');
-//     const book = books.find(b => b.title === title && b.author === author);
-//     if (!book) return;
-
-//     if (cart.find(item => item.id === book.id)) {
-//       alert(`${title} is already in your cart!`);
-//       return;
-//     }
-
-//     cart.push({ id: book.id, title: book.title, author: book.author });
-//     updateLocalStorage();
-//     renderCart();
-//     alert(`${title} added to cart!`);
-//   });
-
-//   // Fetch and render books list
-//   async function renderBooks(category = 'all') {
-//     if (!books.length) await loadBooks();
-//     const bookCatalog = document.getElementById('bookCatalog');
-//     if (!bookCatalog) return;
-//     bookCatalog.innerHTML = '';
-
-//     const filteredBooks = category === 'all' ? books : books.filter(book => book.category === category);
-
-//     filteredBooks.forEach(book => {
-//       const bookCard = `
-//         <div class="bg-white p-6 rounded-xl shadow-lg transform transition duration-300 hover:scale-105 border-t-4 border-indigo-200">
-//           <img src="${book.image || ''}" alt="${book.title}" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
-//           <div class="space-y-2">
-//             <h3 class="font-bold text-xl text-gray-800">${book.title}</h3>
-//             <p class="text-gray-600">${book.author}</p>
-//             <p class="text-sm text-indigo-500 italic font-medium">${book.category.charAt(0).toUpperCase() + book.category.slice(1)}</p>
-//             <p class="text-sm text-gray-700 line-clamp-2">${book.description || ''}</p>
-//             <button class="mt-3 w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md" 
-//               onclick="viewBook('${book.title}')">View Details</button>
-//           </div>
-//         </div>
-//       `;
-//       bookCatalog.innerHTML += bookCard;
-//     });
-//   }
-
-//   window.filterBooks = function (category, clickedButton) {
-//     document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-//     clickedButton.classList.add('active');
-//     renderBooks(category);
-//   };
-
-//   // --- CART & BORROWING ---
-//   window.emptyCart = function () {
-//     if (confirm('Are you sure you want to empty your cart?')) {
-//       cart = [];
-//       updateLocalStorage();
-//       renderCart();
-//       alert('Cart emptied!');
-//     }
-//   }
-
-//   window.borrowBook = async function (index) {
-//     if (!activeUser) { alert('Please login first.'); return; }
-//     const item = cart[index];
-//     if (!item) return;
-
-//     try {
-//       await api('/api/borrowing/borrow', {
-//         method: 'POST',
-//         body: JSON.stringify({
-//           user_id: activeUser.id,
-//           book_id: item.id,
-//           book_title: item.title,
-//           book_author: item.author,
-//         })
-//       });
-//       cart.splice(index, 1);
-//       updateLocalStorage();
-//       renderCart();
-//       await loadBorrowRecords();
-//       renderBorrowList();
-//       alert(`${item.title} borrowed successfully! Happy reading!`);
-//     } catch (err) {
-//       alert((err && err.message) || 'Failed to borrow');
-//     }
-//   };
-
-//   window.returnBook = async function (borrowId) {
-//     if (!activeUser) { alert('Please login first.'); return; }
-//     try {
-//       await api(`/api/borrowing/return/${borrowId}`, { method: 'PUT' });
-//       await loadBorrowRecords();
-//       renderBorrowList();
-//       alert('Returned successfully!');
-//     } catch (err) {
-//       alert((err && err.message) || 'Failed to return');
-//     }
-//   };
-
-//   // --- PROFILE ---
-//   editProfileBtn?.addEventListener('click', () => {
-//     originalProfile = { name: profileNameInput.value, email: profileEmailInput.value };
-//     toggleEditMode(true);
-//   });
-
-//   cancelProfileBtn?.addEventListener('click', () => {
-//     profileNameInput.value = originalProfile.name;
-//     profileEmailInput.value = originalProfile.email;
-//     toggleEditMode(false);
-//   });
-
-//   saveProfileBtn?.addEventListener('click', async () => {
-//     if (!activeUser) return;
-
-//     const newName = profileNameInput.value.trim();
-//     const newEmail = profileEmailInput.value.trim();
-//     if (!newName || !newEmail) { alert('Name and Email cannot be empty.'); return; }
-
-//     try {
-//       const updated = await api(`/api/users/${activeUser.id}`, {
-//         method: 'PUT',
-//         body: JSON.stringify({ name: newName, email: newEmail })
-//       });
-//       activeUser = updated;
-//       alert('Profile updated successfully!');
-//       toggleEditMode(false);
-//       await loadMembers();
-//     } catch (err) {
-//       alert((err && err.message) || 'Failed to update profile');
-//     }
-//   });
-
-//   changeAvatarBtn?.addEventListener('click', () => {
-//     const randomSeed = Math.floor(Math.random() * 1000);
-//     profileAvatar.src = `https://picsum.photos/seed/${randomSeed}/120/120`;
-//     alert('Avatar updated! (Simulated)');
-//   });
-
-//   // --- INITIAL RENDER (unauthenticated) ---
-//   renderBooks();
-//   renderCart();
-//   renderBorrowList();
-
-//   // Toggle Add Book form display
-//   window.toggleAddBookForm = function () {
-//     const form = document.getElementById('addBookForm');
-//     form.classList.toggle('hidden');
-//   };
-
-//   // Add Book form submit handler
-//   window.handleAddBook = async function (e) {
-//     e.preventDefault();
-//     const API_BASE = "http://localhost:8000";
-//     const data = {
-//       title: document.getElementById('bookTitle').value.trim(),
-//       author: document.getElementById('bookAuthor').value.trim(),
-//       category: document.getElementById('bookCategory').value.trim(),
-//       image: document.getElementById('bookImage').value.trim(),
-//       isbn: document.getElementById('bookISBN').value.trim() || undefined,
-//       published_year: parseInt(document.getElementById('bookYear').value) || undefined,
-//       description: document.getElementById('bookDesc').value.trim(),
-//       available: true
-//     };
-//     try {
-//       const res = await fetch(`${API_BASE}/api/books`, {
-//         method: 'POST',
-//         headers: {'Content-Type':'application/json'},
-//         body: JSON.stringify(data)
-//       });
-//       if (!res.ok) throw new Error((await res.json()).detail || "Add failed.");
-//       alert("Book added!");
-//       toggleAddBookForm();
-//       await loadBooks();
-//       renderBooks();
-//       e.target.reset();
-//     } catch (err) {
-//       alert(`Failed to add book: ${err.message}`);
-//     }
-//     return false;
-//   };
-
-//   // Show Add Book section if admin user
-//   function showAddBookForAdmin() {
-//     const section = document.getElementById('addBookSection');
-//     if (activeUser && activeUser.role === 'admin') {
-//       section.classList.remove('hidden');
-//     } else {
-//       section.classList.add('hidden');
-//     }
-//   }
-
-//   // Call after login/signup
-//   const _prevLogin = loginForm.onsubmit;
-//   loginForm?.addEventListener('submit', async function(e) {
-//     setTimeout(showAddBookForAdmin, 50);
-//   });
-//   signupForm?.addEventListener('submit', async function(e) {
-//     setTimeout(showAddBookForAdmin, 300);
-//   });
-//   logoutBtn?.addEventListener('click', showAddBookForAdmin);
-//   // Call also on page load
-//   showAddBookForAdmin();
-// });
 
 
 
@@ -1539,16 +1240,27 @@ window.addEventListener('DOMContentLoaded', () => {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
     try {
+      // Send as FormData to match backend expectations
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
+      
       const res = await api('/api/users/login', {
         method: 'POST',
-        body: JSON.stringify({ username, password })
+        body: formData
       });
+      
+      console.log('Login response:', res);
+      console.log('User object:', res.user);
+      console.log('User role:', res.user?.role);
+      
       // Handle both JWT-style response ({ token, user }) and legacy user object
       if (res && res.token) {
         localStorage.setItem('token', res.token);
         // IMPORTANT: Save user to localStorage to ensure avatar is stored per user
         localStorage.setItem('user', JSON.stringify(res.user));
         activeUser = res.user;
+        console.log('Stored user in localStorage:', res.user);
       } else if (res && res.user) {
         // If response has user object
         localStorage.setItem('user', JSON.stringify(res.user));
@@ -1861,35 +1573,49 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- CATALOG & BOOK DETAILS ---
-  window.viewBook = function (title) {
-    const book = books.find(b => b.title === title);
-    if (!book) return;
+  window.viewBook = function (bookId) {
+    console.log('viewBook called with ID:', bookId);
+    console.log('Available books:', books);
+    
+    const book = books.find(b => b.id === parseInt(bookId));
+    console.log('Found book:', book);
+    
+    if (!book) {
+      console.error('Book not found with ID:', bookId);
+      alert('Book not found!');
+      return;
+    }
 
     document.getElementById('bookImage').src = book.image || '';
     document.getElementById('bookTitle').textContent = book.title;
     document.getElementById('bookAuthor').textContent = `By ${book.author}`;
     document.getElementById('bookDescription').textContent = book.description || '';
     document.getElementById('bookCategory').textContent = `Category: ${book.category.charAt(0).toUpperCase() + book.category.slice(1)}`;
+    
+    // Store current book ID for add to cart
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn) {
+      addToCartBtn.dataset.bookId = book.id;
+    }
 
     showPage('bookDetails');
   };
 
   const addToCartBtn = document.getElementById('addToCartBtn');
   addToCartBtn?.addEventListener('click', () => {
-    const title = document.getElementById('bookTitle').textContent;
-    const author = document.getElementById('bookAuthor').textContent.replace('By ', '');
-    const book = books.find(b => b.title === title && b.author === author);
+    const bookId = parseInt(addToCartBtn.dataset.bookId);
+    const book = books.find(b => b.id === bookId);
     if (!book) return;
 
     if (cart.find(item => item.id === book.id)) {
-      alert(`${title} is already in your cart!`);
+      alert(`${book.title} is already in your cart!`);
       return;
     }
 
     cart.push({ id: book.id, title: book.title, author: book.author });
     updateLocalStorage();
     renderCart();
-    alert(`${title} added to cart!`);
+    alert(`${book.title} added to cart!`);
   });
 
   // Fetch and render books list
@@ -1911,7 +1637,7 @@ window.addEventListener('DOMContentLoaded', () => {
             <p class="text-sm text-indigo-500 italic font-medium">${book.category.charAt(0).toUpperCase() + book.category.slice(1)}</p>
             <p class="text-sm text-gray-700 line-clamp-2">${book.description || ''}</p>
             <button class="mt-3 w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-semibold shadow-md" 
-              onclick="viewBook('${book.title}')">View Details</button>
+              onclick="viewBook(${book.id})">View Details</button>
           </div>
         </div>
       `;
@@ -1993,15 +1719,26 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!newName || !newEmail) { alert('Name and Email cannot be empty.'); return; }
 
     try {
-      const updated = await api(`/api/users/${activeUser.id}`, {
+      // Send as FormData to match backend expectations
+      const formData = new FormData();
+      formData.append('name', newName);
+      formData.append('email', newEmail);
+
+      const updated = await api('/api/users/me', {
         method: 'PUT',
-        body: JSON.stringify({ name: newName, email: newEmail })
+        body: formData
       });
+      
+      // Update activeUser and localStorage
       activeUser = updated;
+      localStorage.setItem('user', JSON.stringify(updated));
+      
       alert('Profile updated successfully!');
       toggleEditMode(false);
+      updateProfileFields(updated);
       await loadMembers();
     } catch (err) {
+      console.error('Profile update error:', err);
       alert((err && err.message) || 'Failed to update profile');
     }
   });
@@ -2047,8 +1784,12 @@ window.addEventListener('DOMContentLoaded', () => {
                 try { localStorage.setItem('user', JSON.stringify(activeUser)); } catch (e) {}
                 // Update avatar from backend response (user-specific) with cache-busting
                 if (updated.avatar) {
-                  const separator = updated.avatar.includes('?') ? '&' : '?';
-                  profileAvatar.src = updated.avatar + separator + '_t=' + Date.now();
+                  let avatarUrl = updated.avatar;
+                  if (avatarUrl.startsWith('/uploads/')) {
+                    avatarUrl = buildUrl(avatarUrl);
+                  }
+                  const separator = avatarUrl.includes('?') ? '&' : '?';
+                  profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
                 }
               }
             } else {
@@ -2082,9 +1823,14 @@ window.addEventListener('DOMContentLoaded', () => {
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       // Always use avatar from user object (stored per user in backend)
       if (storedUser && storedUser.avatar && profileAvatar) {
+        // Build full URL for avatar if it's a relative path
+        let avatarUrl = storedUser.avatar;
+        if (avatarUrl.startsWith('/uploads/')) {
+          avatarUrl = buildUrl(avatarUrl);
+        }
         // Add cache-busting to ensure fresh image load
-        const separator = storedUser.avatar.includes('?') ? '&' : '?';
-        profileAvatar.src = storedUser.avatar + separator + '_t=' + Date.now();
+        const separator = avatarUrl.includes('?') ? '&' : '?';
+        profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
       }
     } catch (err) { /* ignore */ }
   })();

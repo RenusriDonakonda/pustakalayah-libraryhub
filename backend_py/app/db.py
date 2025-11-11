@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-import hashlib
+import bcrypt
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./library.db"
 engine = create_engine(
@@ -21,12 +21,12 @@ def get_db():
 from . import models  # noqa: E402
 
 def hash_password(password: str) -> str:
-    """Simple password hashing using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Secure password hashing using bcrypt"""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify password against hash"""
-    return hash_password(password) == hashed
+    """Verify password against bcrypt hash"""
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def init_db():
     # Drop all tables
@@ -43,7 +43,8 @@ def init_db():
                 password_hash=hash_password("admin"),
                 email="admin@library.com",
                 name="Admin User",
-                role="admin"
+                role="admin",
+                email_verified=True
             )
             db.add(admin_user)
             print("Default admin user created: admin/admin")

@@ -12,9 +12,11 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=True)
+    mobile = Column(String, nullable=True)
     member_since = Column(DateTime, default=datetime.utcnow)
     role = Column(String, default="member")
     avatar = Column(String, nullable=True)
+    email_verified = Column(Boolean, default=False)
 
     borrowings = relationship("Borrowing", back_populates="user")
 

@@ -25,6 +25,7 @@
         <a href="borrowing.html" class="text-gray-700 hover:text-indigo-600 font-medium">Borrowing</a>
         <a href="members.html" class="text-gray-700 hover:text-indigo-600 font-medium">Members</a>
         <a href="profile.html" class="text-gray-700 hover:text-indigo-600 font-medium">Profile</a>
+        <a href="admin.html" id="adminLink" class="text-gray-700 hover:text-red-600 font-medium hidden">🔐 Admin</a>
         <button id="logoutBtn" class="bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition">Logout</button>
       </div>
     </div>
@@ -73,5 +74,13 @@
   </section>
 
   <script src="../script.js"></script>
+  <script>
+    // Show admin link if user is admin
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user && user.role === 'admin') {
+      const adminLink = document.getElementById('adminLink');
+      if (adminLink) adminLink.classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
