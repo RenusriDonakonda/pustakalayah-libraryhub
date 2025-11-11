@@ -21,6 +21,7 @@ function navigateTo(filename) {
   }
 }
 
+
 const DEFAULT_AVATARS = ['avatar1.svg','avatar2.svg','avatar3.svg','avatar4.svg','avatar5.svg','avatar7.svg','avatar8.svg'];
 
 // Demo API fallback when API_BASE is empty
@@ -211,6 +212,62 @@ let books = [];
 let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 let borrowRecords = [];
 
+// Generate a circular initials avatar as data URL
+function generateInitialsAvatar(name, size = 64) {
+  try {
+    const initials = (name || '').split(' ').filter(Boolean).slice(0,2).map(s => s[0].toUpperCase()).join('') || 'U';
+    // deterministic background color from name
+    let hash = 0; for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    const hue = Math.abs(hash) % 360;
+    const bg = `hsl(${hue} 60% 65%)`;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    // background
+    ctx.fillStyle = bg; ctx.fillRect(0,0,size,size);
+    // circle mask
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.beginPath(); ctx.arc(size/2, size/2, size/2, 0, Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    // draw initials
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${Math.floor(size*0.45)}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(initials, size/2, size/2);
+    return canvas.toDataURL('image/png');
+  } catch (e) {
+    return 'https://via.placeholder.com/48?text=U';
+  }
+}
+
+// Update profile fields with user data
+function updateProfileFields(user) {
+  if (!user) return;
+  const profileNameInput = document.getElementById('profileName');
+  const profileEmailInput = document.getElementById('profileEmail');
+  const profileAvatar = document.getElementById('profileAvatar');
+  
+  if (profileNameInput) profileNameInput.value = user.name || user.username || '';
+  if (profileEmailInput) profileEmailInput.value = user.email || '';
+  // Always use avatar from user object (stored in backend per user)
+  // Clear the image first to force refresh and avoid showing wrong avatar
+  if (profileAvatar) {
+    if (user.avatar) {
+      // Build full URL for avatar if it's a relative path
+      let avatarUrl = user.avatar;
+      if (avatarUrl.startsWith('/uploads/')) {
+        avatarUrl = buildUrl(avatarUrl);
+      }
+      // Add cache-busting parameter to force browser to reload the image
+      const separator = avatarUrl.includes('?') ? '&' : '?';
+      profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
+    } else {
+      // Reset to default if no avatar
+      profileAvatar.src = profileAvatar.src.split('?')[0].split('&')[0]; // Clear any cache params
+    }
+  }
+}
+
 // DOM ready
 window.addEventListener('DOMContentLoaded', () => {
   // IMPORTANT: in demo mode clear any lingering token/user so we don't auto-login
@@ -271,29 +328,6 @@ window.addEventListener('DOMContentLoaded', () => {
         console.debug('Could not persist initials avatar:', err);
       }
     })();
-  }
-
-  function updateProfileFields(user) {
-    if (!user) return;
-    if (profileNameInput) profileNameInput.value = user.name || user.username || '';
-    if (profileEmailInput) profileEmailInput.value = user.email || '';
-    // Always use avatar from user object (stored in backend per user)
-    // Clear the image first to force refresh and avoid showing wrong avatar
-    if (profileAvatar) {
-      if (user.avatar) {
-        // Build full URL for avatar if it's a relative path
-        let avatarUrl = user.avatar;
-        if (avatarUrl.startsWith('/uploads/')) {
-          avatarUrl = buildUrl(avatarUrl);
-        }
-        // Add cache-busting parameter to force browser to reload the image
-        const separator = avatarUrl.includes('?') ? '&' : '?';
-        profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
-      } else {
-        // Reset to default if no avatar
-        profileAvatar.src = profileAvatar.src.split('?')[0].split('&')[0]; // Clear any cache params
-      }
-    }
   }
 
   // Convert repo-relative or manifest-relative paths to a stable absolute URL
@@ -415,6 +449,9 @@ window.addEventListener('DOMContentLoaded', () => {
             profileAvatar.src = avatarUrl + separator + '_t=' + Date.now();
             console.log('handleAvatarFile: Avatar URL updated to', avatarUrl);
           }
+          
+          // Update profile fields to reflect the new avatar
+          updateProfileFields(activeUser);
           
           alert('Avatar updated successfully!');
         } else {
@@ -618,8 +655,8 @@ window.addEventListener('DOMContentLoaded', () => {
         if (passwordEl) passwordEl.value = '';
         if (mobileEl) mobileEl.value = '';
         
-        // Redirect to homepage or dashboard
-        window.location.href = 'homepage.html';
+        // Redirect to main app (index.html contains the full app with all pages)
+        window.location.href = '../index.html';
         return;
       }
       
@@ -1004,7 +1041,13 @@ window.addEventListener('DOMContentLoaded', () => {
     memberListTable.innerHTML = '';
     users.forEach(user => {
       const memberSince = user.member_since ? new Date(user.member_since).toLocaleDateString('en-US') : 'N/A';
-      const avatarUrl = user.avatar || user.profileAvatar || null;
+      let avatarUrl = user.avatar || user.profileAvatar || null;
+      
+      // Build full URL for avatar if it's a relative path from backend
+      if (avatarUrl && avatarUrl.startsWith('/uploads/')) {
+        avatarUrl = buildUrl(avatarUrl);
+      }
+      
       // We'll use data-src for lazy loading and a small inline placeholder
       const placeholder = generateInitialsAvatar(user.name || user.username || 'U', 48);
       const dataSrc = avatarUrl || placeholder;
@@ -1022,34 +1065,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // After rendering, setup lazy-loading and click handlers
     setupLazyAvatars();
-  }
-
-  // Generate a circular initials avatar as data URL
-  function generateInitialsAvatar(name, size = 64) {
-    try {
-      const initials = (name || '').split(' ').filter(Boolean).slice(0,2).map(s => s[0].toUpperCase()).join('') || 'U';
-      // deterministic background color from name
-      let hash = 0; for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      const hue = Math.abs(hash) % 360;
-      const bg = `hsl(${hue} 60% 65%)`;
-      const canvas = document.createElement('canvas');
-      canvas.width = size; canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      // background
-      ctx.fillStyle = bg; ctx.fillRect(0,0,size,size);
-      // circle mask
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.beginPath(); ctx.arc(size/2, size/2, size/2, 0, Math.PI*2); ctx.fill();
-      ctx.globalCompositeOperation = 'source-over';
-      // draw initials
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `${Math.floor(size*0.45)}px sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(initials, size/2, size/2);
-      return canvas.toDataURL('image/png');
-    } catch (e) {
-      return 'https://via.placeholder.com/48?text=U';
-    }
   }
 
   // Lazy-load avatars using IntersectionObserver with fallback to loading=lazy
@@ -1169,30 +1184,6 @@ window.addEventListener('DOMContentLoaded', () => {
     updateBorrowCountDisplay();
   }
 
-  function updateProfileFields(user) {
-    if (!user) return;
-    profileNameInput.value = user.name || user.username;
-    profileEmailInput.value = user.email;
-    // Always use avatar from user object (stored per user in backend)
-    // Clear the image first to force refresh and avoid showing wrong avatar
-    if (profileAvatar) {
-      if (user.avatar) {
-        // Add cache-busting parameter to force browser to reload the image
-        const separator = user.avatar.includes('?') ? '&' : '?';
-        profileAvatar.src = user.avatar + separator + '_t=' + Date.now();
-      } else {
-        // Reset to default if no avatar - clear any cache params
-        const currentSrc = profileAvatar.src;
-        const baseSrc = currentSrc.split('?')[0].split('&')[0];
-        if (!baseSrc.includes('avatar')) {
-          // Only reset if it's not already a default avatar
-          profileAvatar.src = '';
-        }
-      }
-    }
-    originalProfile = { name: profileNameInput.value, email: profileEmailInput.value };
-  }
-
   function toggleEditMode(isEditing) {
     profileNameInput.readOnly = !isEditing;
     profileEmailInput.readOnly = !isEditing;
@@ -1207,7 +1198,26 @@ window.addEventListener('DOMContentLoaded', () => {
     changeAvatarBtn.disabled = !isEditing;
   }
 
-  
+  // Refresh user profile from backend to ensure avatar and other data are up-to-date
+  async function refreshUserProfile() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !activeUser) return;
+      
+      // Fetch fresh user data from backend
+      const updatedUser = await api('/api/users/me');
+      if (updatedUser) {
+        activeUser = updatedUser;
+        localStorage.setItem('user', JSON.stringify(activeUser));
+        updateProfileFields(activeUser);
+        console.log('User profile refreshed from backend', updatedUser);
+      }
+    } catch (err) {
+      console.error('Failed to refresh user profile:', err);
+      // If refresh fails, use cached data
+      updateProfileFields(activeUser);
+    }
+  }
 
   // --- NAVIGATION LOGIC ---
   window.showPage = function (id) {
@@ -1229,8 +1239,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (id === 'borrowing') renderBorrowList();
     if (id === 'members') loadMembers();
     if (id === 'profile' && activeUser) {
-      // Refresh profile fields including avatar when navigating to profile page
-      updateProfileFields(activeUser);
+      // Fetch fresh user data from backend to ensure avatar is up-to-date
+      refreshUserProfile();
     }
   };
 
