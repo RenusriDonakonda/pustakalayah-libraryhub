@@ -49,6 +49,26 @@ async function api(path, options = {}) {
     }
     function loadDemoUsers() { try { return JSON.parse(localStorage.getItem('demo_users') || '[]'); } catch(e) { return []; } }
     function saveDemoUsers(list) { localStorage.setItem('demo_users', JSON.stringify(list)); }
+    function getCurrentDemoUser() {
+      try {
+        const u = JSON.parse(localStorage.getItem('user') || 'null');
+        return u && u.id ? u : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    function loadDemoWishlist(userId) {
+      if (!userId) return [];
+      try {
+        return JSON.parse(localStorage.getItem('demo_wishlist_' + userId) || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+    function saveDemoWishlist(userId, list) {
+      if (!userId) return;
+      localStorage.setItem('demo_wishlist_' + userId, JSON.stringify(list));
+    }
     function loadDemoBooks() {
       try {
         const books = JSON.parse(localStorage.getItem('demo_books') || '[]');
@@ -177,47 +197,108 @@ async function api(path, options = {}) {
       const { password: _, ...userWithoutPassword } = users[idx];
       return userWithoutPassword;
     }
-        // Demo book catalog
-        if (path === '/api/books' && method === 'GET') {
-          return loadDemoBooks();
-        }
+    // Demo: current user profile
+    if (path === '/api/users/me' && method === 'GET') {
+      const current = getCurrentDemoUser();
+      if (!current) throw new Error('Not logged in');
+      const { password: _, ...userWithoutPassword } = current;
+      return userWithoutPassword;
+    }
+    // Demo: wishlist list/load
+    if (path === '/api/users/wishlist' && method === 'GET') {
+      const current = getCurrentDemoUser();
+      if (!current) throw new Error('Not logged in');
+      const list = loadDemoWishlist(current.id);
+      return { success: true, wishlist: list };
+    }
+    // Demo: add to wishlist
+    if (path === '/api/users/wishlist' && method === 'POST') {
+      const current = getCurrentDemoUser();
+      if (!current) throw new Error('Not logged in');
+      let book_id, book_title, book_author;
+      if (options.body instanceof FormData) {
+        book_id = parseInt(options.body.get('book_id'));
+        book_title = options.body.get('book_title');
+        book_author = options.body.get('book_author');
+      } else {
+        ({ book_id, book_title, book_author } = body || {});
+      }
+      if (!book_id) throw new Error('Missing book_id');
+      const list = loadDemoWishlist(current.id);
+      if (list.some(it => it.book_id === book_id)) {
+        return { success: true, wishlist_item: list.find(it => it.book_id === book_id) };
+      }
+      const item = {
+        id: Date.now(),
+        user_id: current.id,
+        book_id,
+        book_title,
+        book_author,
+        added_date: new Date().toISOString()
+      };
+      list.push(item);
+      saveDemoWishlist(current.id, list);
+      return { success: true, wishlist_item: item };
+    }
+    // Demo: remove from wishlist
+    if (path.match(/\/api\/users\/wishlist\/\d+$/) && method === 'DELETE') {
+      const current = getCurrentDemoUser();
+      if (!current) throw new Error('Not logged in');
+      const bookId = parseInt(path.split('/').pop());
+      let list = loadDemoWishlist(current.id);
+      list = list.filter(it => it.book_id !== bookId);
+      saveDemoWishlist(current.id, list);
+      return { success: true };
+    }
+    // Demo: check wishlist status
+    if (path.match(/\/api\/users\/wishlist\/check\/\d+$/) && method === 'GET') {
+      const current = getCurrentDemoUser();
+      if (!current) return { in_wishlist: false };
+      const bookId = parseInt(path.split('/').pop());
+      const list = loadDemoWishlist(current.id);
+      return { in_wishlist: list.some(it => it.book_id === bookId) };
+    }
+    // Demo book catalog
+    if (path === '/api/books' && method === 'GET') {
+      return loadDemoBooks();
+    }
 
-        // Demo borrowing system
-        if (path === '/api/borrowing/borrow' && method === 'POST') {
-          const { user_id, book_id, book_title, book_author } = body || {};
-          const borrowings = loadDemoBorrowings();
-          const newBorrowing = {
-            id: Date.now(),
-            user_id,
-            book_id,
-            book_title,
-            book_author,
-            status: 'borrowed',
-            borrow_date: new Date().toISOString(),
-            return_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-          };
-          borrowings.push(newBorrowing);
-          saveDemoBorrowings(borrowings);
-          return newBorrowing;
-        }
+    // Demo borrowing system
+    if (path === '/api/borrowing/borrow' && method === 'POST') {
+      const { user_id, book_id, book_title, book_author } = body || {};
+      const borrowings = loadDemoBorrowings();
+      const newBorrowing = {
+        id: Date.now(),
+        user_id,
+        book_id,
+        book_title,
+        book_author,
+        status: 'borrowed',
+        borrow_date: new Date().toISOString(),
+        return_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      };
+      borrowings.push(newBorrowing);
+      saveDemoBorrowings(borrowings);
+      return newBorrowing;
+    }
 
-        if (path.startsWith('/api/borrowing/return/') && method === 'PUT') {
-          const borrowId = parseInt(path.split('/').pop());
-          const borrowings = loadDemoBorrowings();
-          const index = borrowings.findIndex(b => b.id === borrowId);
-          if (index === -1) throw new Error('Borrow record not found');
-          if (borrowings[index].status === 'returned') throw new Error('Book already returned');
-          borrowings[index].status = 'returned';
-          borrowings[index].return_date = new Date().toISOString();
-          saveDemoBorrowings(borrowings);
-          return { success: true, ...borrowings[index] };
-        }
+    if (path.startsWith('/api/borrowing/return/') && method === 'PUT') {
+      const borrowId = parseInt(path.split('/').pop());
+      const borrowings = loadDemoBorrowings();
+      const index = borrowings.findIndex(b => b.id === borrowId);
+      if (index === -1) throw new Error('Borrow record not found');
+      if (borrowings[index].status === 'returned') throw new Error('Book already returned');
+      borrowings[index].status = 'returned';
+      borrowings[index].return_date = new Date().toISOString();
+      saveDemoBorrowings(borrowings);
+      return { success: true, ...borrowings[index] };
+    }
 
-        if (path.includes('/api/borrowing/user/') && method === 'GET') {
-          const userId = parseInt(path.split('/').pop());
-          const borrowings = loadDemoBorrowings();
-          return borrowings.filter(b => b.user_id === userId);
-        }
+    if (path.includes('/api/borrowing/user/') && method === 'GET') {
+      const userId = parseInt(path.split('/').pop());
+      const borrowings = loadDemoBorrowings();
+      return borrowings.filter(b => b.user_id === userId);
+    }
 
     throw new Error('No backend configured for this endpoint in demo mode');
   }
@@ -3150,7 +3231,7 @@ window.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await api('/api/users/wishlist');
       console.log('📋 Wishlist response:', response);
-      if (response.success) {
+      if (response && response.success) {
         wishlistItems = response.wishlist || [];
         updateWishlistUI();
         console.log('✅ Wishlist loaded successfully:', wishlistItems.length, 'items');
@@ -3198,27 +3279,13 @@ window.addEventListener('DOMContentLoaded', () => {
       formData.append('book_title', bookTitle);
       formData.append('book_author', bookAuthor);
 
-      console.log('📤 Sending wishlist request to backend...');
-      
-      // Use the global buildUrl function for proper URL construction
-      const response = await fetch(window.buildUrl('/api/users/wishlist'), {
+      console.log('📤 Sending wishlist request (via api helper)...');
+
+      const result = await api('/api/users/wishlist', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
-      console.log('📥 Wishlist response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.detail || `HTTP ${response.status}: Failed to add to wishlist`;
-        console.error('❌ Wishlist API error:', { status: response.status, error: errorData });
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
       console.log('✅ Wishlist API response:', result);
       
       if (result.success) {
@@ -3264,25 +3331,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     
     try {
-      console.log('📤 Sending remove request to backend...');
-      
-      const response = await fetch(window.buildUrl(`/api/users/wishlist/${bookId}`), {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      console.log('📤 Sending remove request (via api helper)...');
+
+      const result = await api(`/api/users/wishlist/${bookId}`, {
+        method: 'DELETE'
       });
 
-      console.log('📥 Remove response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.detail || `HTTP ${response.status}: Failed to remove from wishlist`;
-        console.error('❌ Remove API error:', { status: response.status, error: errorData });
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
       console.log('✅ Remove API response:', result);
       
       if (result.success) {
@@ -3393,20 +3447,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // Check if book is in wishlist
   async function checkWishlistStatus(bookId) {
     try {
-      const response = await fetch(window.buildUrl(`/api/users/wishlist/check/${bookId}`), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return result.in_wishlist;
-      }
+      const result = await api(`/api/users/wishlist/check/${bookId}`);
+      return !!(result && result.in_wishlist);
     } catch (error) {
       console.error('Failed to check wishlist status:', error);
+      return false;
     }
-    return false;
   }
 
   // Show/hide Add Book section on page load for good measure
