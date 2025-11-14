@@ -433,12 +433,6 @@ function updateProfileFields(user) {
 
 // DOM ready
 window.addEventListener('DOMContentLoaded', () => {
-  // IMPORTANT: in demo mode clear any lingering token/user so we don't auto-login
-  if (!API_BASE) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }
-
   // Elements
   const loginForm = document.getElementById('loginForm');
   const signupForm = document.getElementById('signupForm');
