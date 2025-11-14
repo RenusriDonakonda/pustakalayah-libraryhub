@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Debug</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Application Debug</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Server Status</h2>
+            <div id="serverStatus" class="space-y-2"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">JavaScript Test</h2>
+            <div id="jsTest" class="space-y-2"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Backend Test</h2>
+            <div id="backendTest" class="space-y-2"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div class="space-y-4">
+                <a href="http://localhost:3000" target="_blank" class="block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-center">
+                    Open Main Application
+                </a>
+                <button onclick="testAll()" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    Run All Tests
+                </button>
+                <button onclick="clearResults()" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                    Clear Results
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function updateStatus(elementId, message, isGood = null) {
+            const element = document.getElementById(elementId);
+            const color = isGood === true ? 'text-green-600' : isGood === false ? 'text-red-600' : 'text-blue-600';
+            element.innerHTML += `<p class="${color}">${message}</p>`;
+        }
+        
+        function clearResults() {
+            ['serverStatus', 'jsTest', 'backendTest'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+        
+        async function testFrontend() {
+            updateStatus('serverStatus', 'Testing frontend server...');
+            try {
+                const response = await fetch('http://localhost:3000');
+                if (response.ok) {
+                    updateStatus('serverStatus', '✅ Frontend server is running', true);
+                } else {
+                    updateStatus('serverStatus', `❌ Frontend server error: ${response.status}`, false);
+                }
+            } catch (error) {
+                updateStatus('serverStatus', `❌ Frontend server not accessible: ${error.message}`, false);
+            }
+        }
+        
+        async function testJavaScript() {
+            updateStatus('jsTest', 'Testing JavaScript loading...');
+            try {
+                const response = await fetch('http://localhost:3000/script.js');
+                if (response.ok) {
+                    updateStatus('jsTest', '✅ JavaScript file is accessible', true);
+                    const jsContent = await response.text();
+                    if (jsContent.includes('API_BASE')) {
+                        updateStatus('jsTest', '✅ API configuration found', true);
+                    } else {
+                        updateStatus('jsTest', '⚠️ API configuration might be missing', false);
+                    }
+                } else {
+                    updateStatus('jsTest', `❌ JavaScript file error: ${response.status}`, false);
+                }
+            } catch (error) {
+                updateStatus('jsTest', `❌ JavaScript file not accessible: ${error.message}`, false);
+            }
+        }
+        
+        async function testBackend() {
+            updateStatus('backendTest', 'Testing backend server...');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                if (response.ok) {
+                    updateStatus('backendTest', '✅ Backend server is running', true);
+                } else {
+                    updateStatus('backendTest', `❌ Backend server error: ${response.status}`, false);
+                }
+            } catch (error) {
+                updateStatus('backendTest', `❌ Backend server not accessible: ${error.message}`, false);
+            }
+        }
+        
+        async function testAll() {
+            clearResults();
+            await testFrontend();
+            await testJavaScript();
+            await testBackend();
+        }
+        
+        // Auto-run tests on page load
+        testAll();
+    </script>
+</body>
+</html>

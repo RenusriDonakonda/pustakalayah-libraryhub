@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Debug Steps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">🔧 Wishlist Debug Guide</h1>
+        
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 text-red-800">❌ Error Troubleshooting</h2>
+            <p class="text-red-700 mb-4">If you're getting an error when clicking wishlist, follow these steps:</p>
+        </div>
+        
+        <div class="space-y-6">
+            <!-- Step 1 -->
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">1</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold mb-2">Check Browser Console</h3>
+                        <p class="text-gray-700 mb-3">Open the browser console (F12) and look for JavaScript errors when clicking wishlist.</p>
+                        <div class="bg-gray-100 p-3 rounded text-sm font-mono">
+                            <p>Look for errors like:</p>
+                            <p class="text-red-600">• "showPage is not defined"</p>
+                            <p class="text-red-600">• "Cannot read property of null"</p>
+                            <p class="text-red-600">• "401 Unauthorized"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">2</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold mb-2">Verify Login Status</h3>
+                        <p class="text-gray-700 mb-3">Make sure you're logged in to the application.</p>
+                        <div class="bg-gray-100 p-3 rounded text-sm">
+                            <p>✅ Login with: <code class="bg-white px-2 py-1 rounded">admin / admin</code></p>
+                            <p>✅ Check that you can see other pages like Cart or Profile</p>
+                            <p>✅ Verify the navigation shows your username</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">3</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold mb-2">Test Navigation Function</h3>
+                        <p class="text-gray-700 mb-3">Test if the showPage function works in console.</p>
+                        <div class="bg-gray-100 p-3 rounded text-sm font-mono">
+                            <p>In browser console, run:</p>
+                            <p class="text-green-600">showPage('home')</p>
+                            <p class="text-green-600">showPage('catalog')</p>
+                            <p class="text-green-600">showPage('wishlist')</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 4 -->
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">4</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold mb-2">Check Backend Connection</h3>
+                        <p class="text-gray-700 mb-3">Verify the backend is running and accessible.</p>
+                        <div class="bg-gray-100 p-3 rounded text-sm">
+                            <p>✅ Backend should be on: <code class="bg-white px-2 py-1 rounded">http://localhost:8000</code></p>
+                            <p>✅ Test: <a href="http://localhost:8000/docs" target="_blank" class="text-blue-600">Open API Docs</a></p>
+                            <p>✅ Should see FastAPI documentation page</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 5 -->
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-start gap-4">
+                    <div class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">5</div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold mb-2">Test Wishlist API Directly</h3>
+                        <p class="text-gray-700 mb-3">Use the debug tool to test the API endpoint.</p>
+                        <div class="bg-gray-100 p-3 rounded text-sm">
+                            <p>🔧 Open: <a href="debug_wishlist.html" target="_blank" class="text-blue-600">Wishlist Debug Tool</a></p>
+                            <p>📋 Copy token from localStorage</p>
+                            <p>🧪 Test the API endpoint</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Fixes -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-6 mt-8">
+            <h2 class="text-xl font-bold mb-4 text-green-800">🚀 Quick Fixes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-green-700 mb-2">If not logged in:</h3>
+                    <p class="text-sm text-gray-700">Login with admin/admin and try again</p>
+                </div>
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-green-700 mb-2">If backend not running:</h3>
+                    <p class="text-sm text-gray-700">Restart backend: <code>cd backend_py && python -m uvicorn app.main:app --reload</code></p>
+                </div>
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-green-700 mb-2">If JavaScript error:</h3>
+                    <p class="text-sm text-gray-700">Refresh the page and clear browser cache</p>
+                </div>
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-green-700 mb-2">If page not found:</h3>
+                    <p class="text-sm text-gray-700">Check that wishlist section exists in HTML</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Buttons -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-8">
+            <h2 class="text-xl font-bold mb-4 text-blue-800">🧪 Quick Tests</h2>
+            <div class="flex gap-4 flex-wrap">
+                <a href="http://localhost:3000" target="_blank" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    🚀 Open Main App
+                </a>
+                <a href="debug_wishlist.html" target="_blank" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    🔧 Debug Tool
+                </a>
+                <a href="wishlist_test.html" target="_blank" class="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600">
+                    📋 Test Page
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

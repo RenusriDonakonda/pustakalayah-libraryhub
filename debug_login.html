@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Debug</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Login Debug</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Login Form</h2>
+            <form id="debugForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Username:</label>
+                    <input type="text" id="debugUsername" value="admin" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password:</label>
+                    <input type="password" id="debugPassword" value="admin" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                    Test Login
+                </button>
+            </form>
+            <div id="debugResult" class="mt-4"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Debug Log</h2>
+            <div id="debugLog" class="font-mono text-sm space-y-1"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function log(message) {
+            const debugLog = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            console.log(message);
+        }
+        
+        async function testLogin(username, password) {
+            log('Starting login test...');
+            log(`Username: ${username}`);
+            log(`Password: ${password.replace(/./g, '*')}`);
+            
+            try {
+                // Create FormData exactly like the main app
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+                
+                log('FormData created:');
+                for (let [key, value] of formData.entries()) {
+                    log(`  ${key}: ${value}`);
+                }
+                
+                const url = `${API_BASE}/api/users/login`;
+                log(`Sending request to: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                log(`Response status: ${response.status} ${response.statusText}`);
+                log(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers))}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    log(`Error response: ${JSON.stringify(errorData)}`);
+                    throw new Error(errorData.detail || errorData.message || 'Login failed');
+                }
+                
+                const data = await response.json();
+                log(`Success response: ${JSON.stringify(data)}`);
+                
+                return data;
+                
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                log(`Stack: ${error.stack}`);
+                throw error;
+            }
+        }
+        
+        document.getElementById('debugForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = document.getElementById('debugResult');
+            const username = document.getElementById('debugUsername').value;
+            const password = document.getElementById('debugPassword').value;
+            
+            result.innerHTML = '<p class="text-blue-600">Testing login...</p>';
+            
+            try {
+                const data = await testLogin(username, password);
+                result.innerHTML = `
+                    <div class="p-3 bg-green-50 border border-green-200 rounded">
+                        <p class="text-green-800 font-semibold">✅ Login Successful!</p>
+                        <p class="text-green-700">User: ${data.user.username}</p>
+                        <p class="text-green-700">Role: ${data.user.role}</p>
+                        <p class="text-green-700">Token: ${data.token.substring(0, 50)}...</p>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="p-3 bg-red-50 border border-red-200 rounded">
+                        <p class="text-red-800 font-semibold">❌ Login Failed</p>
+                        <p class="text-red-700">${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Clear log on load
+        log('Debug page loaded');
+        log('Ready to test login');
+    </script>
+</body>
+</html>

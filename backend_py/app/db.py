@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-import bcrypt
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./library.db"
 engine = create_engine(
@@ -21,12 +20,12 @@ def get_db():
 from . import models  # noqa: E402
 
 def hash_password(password: str) -> str:
-    """Secure password hashing using bcrypt"""
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    """Plain text password storage (no hashing)"""
+    return password
 
-def verify_password(password: str, hashed: str) -> bool:
-    """Verify password against bcrypt hash"""
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+def verify_password(password: str, stored: str) -> bool:
+    """Verify password against stored plain text"""
+    return password == stored
 
 def init_db():
     # Drop all tables

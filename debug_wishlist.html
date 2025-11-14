@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Debug</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔍 Wishlist Debug Tool</h1>
+        
+        <div class="bg-white rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Test Wishlist API</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Authorization Token</label>
+                    <input type="text" id="tokenInput" placeholder="Get from browser localStorage" 
+                           class="w-full p-2 border rounded-lg">
+                    <small class="text-gray-600">Open browser console: localStorage.getItem('token')</small>
+                </div>
+                
+                <button onclick="testWishlistAPI()" 
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                    Test Wishlist API
+                </button>
+                
+                <div id="apiResult" class="bg-gray-100 p-4 rounded-lg hidden">
+                    <h3 class="font-bold mb-2">API Response:</h3>
+                    <pre id="responseContent" class="text-sm overflow-auto"></pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Quick Steps</h2>
+            <ol class="list-decimal space-y-2">
+                <li>Open the main application: <a href="http://localhost:3000" target="_blank" class="text-blue-600">http://localhost:3000</a></li>
+                <li>Login with: admin / admin</li>
+                <li>Open browser console (F12)</li>
+                <li>Run: <code class="bg-gray-100 px-2 py-1">localStorage.getItem('token')</code></li>
+                <li>Copy the token and paste it above</li>
+                <li>Click "Test Wishlist API"</li>
+                <li>Check the response for errors</li>
+            </ol>
+        </div>
+        
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-yellow-800">Common Issues</h2>
+            <ul class="space-y-2 text-yellow-700">
+                <li><strong>401 Unauthorized:</strong> Token is expired or invalid</li>
+                <li><strong>404 Not Found:</strong> Backend is not running or endpoint doesn't exist</li>
+                <li><strong>500 Server Error:</strong> Backend database issue (wishlist table not created)</li>
+                <li><strong>CORS Error:</strong> Frontend and backend on different ports</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        async function testWishlistAPI() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const resultDiv = document.getElementById('apiResult');
+            const responseContent = document.getElementById('responseContent');
+            
+            if (!token) {
+                alert('Please enter a token');
+                return;
+            }
+            
+            try {
+                console.log('Testing wishlist API with token:', token.substring(0, 20) + '...');
+                
+                const response = await fetch('http://localhost:8000/api/users/wishlist', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                resultDiv.classList.remove('hidden');
+                responseContent.textContent = JSON.stringify({
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok,
+                    data: data
+                }, null, 2);
+                
+                if (response.ok) {
+                    resultDiv.classList.add('bg-green-50');
+                    resultDiv.classList.remove('bg-red-50');
+                } else {
+                    resultDiv.classList.add('bg-red-50');
+                    resultDiv.classList.remove('bg-green-50');
+                }
+                
+            } catch (error) {
+                console.error('API test failed:', error);
+                resultDiv.classList.remove('hidden');
+                resultDiv.classList.add('bg-red-50');
+                resultDiv.classList.remove('bg-green-50');
+                responseContent.textContent = JSON.stringify({
+                    error: error.message,
+                    stack: error.stack
+                }, null, 2);
+            }
+        }
+        
+        // Auto-fill token if available in localStorage
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('tokenInput').value = token;
+            }
+        });
+    </script>
+</body>
+</html>

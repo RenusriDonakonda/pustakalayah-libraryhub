@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Book Details Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+        }
+        
+        .animate-pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
+    <div class="max-w-6xl w-full mx-auto px-4 py-10">
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 drop-shadow-lg">
+                📚 Enhanced Book Details Showcase
+            </h1>
+            <p class="text-xl text-gray-600 italic">
+                "Experience the new immersive book details that will make users fall in love with reading!"
+            </p>
+        </div>
+        
+        <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-indigo-100">
+            <!-- Hero Section -->
+            <div class="relative bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white">
+                <div class="absolute top-4 right-4 bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
+                    🔥 TRENDING NOW
+                </div>
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="relative group">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600" 
+                             class="relative w-64 h-96 object-cover rounded-2xl shadow-2xl transform transition duration-300 group-hover:scale-105 animate-float" 
+                             alt="Book Cover">
+                        <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-gray-800">
+                            🏆 Bestseller 2024
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 text-center md:text-left">
+                        <h1 class="text-4xl font-black mb-3 leading-tight animate-fade-in">
+                            The Art of Digital Transformation
+                        </h1>
+                        <p class="text-2xl mb-4 font-light opacity-90 animate-fade-in">
+                            By Dr. Sarah Mitchell
+                        </p>
+                        
+                        <div class="flex items-center justify-center md:justify-start gap-4 mb-6">
+                            <div class="flex text-yellow-300 text-2xl animate-fade-in">
+                                ⭐⭐⭐⭐⭐
+                            </div>
+                            <span class="text-white/90 font-semibold animate-fade-in">4.9 out of 5</span>
+                            <span class="text-white/75 animate-fade-in">(5,234 reviews)</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                            <span class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold border border-white/30 animate-fade-in">
+                                📚 Technology
+                            </span>
+                            <span class="bg-green-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold animate-fade-in">
+                                ✅ In Stock
+                            </span>
+                            <span class="bg-blue-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold animate-fade-in">
+                                📖 520 Pages
+                            </span>
+                            <span class="bg-purple-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold animate-fade-in">
+                                🎯 Award Winner
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Section -->
+            <div class="p-8">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                        <span class="text-3xl">📖</span> About This Masterpiece
+                    </h3>
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border-l-4 border-indigo-500">
+                        <div class="text-gray-700 leading-relaxed text-lg">
+                            🌟 <strong>A REVOLUTIONARY GUIDE THAT WILL TRANSFORM YOUR DIGITAL JOURNEY</strong> 🌟<br><br>
+                            
+                            This isn't just another technology book—it's your personal roadmap to digital excellence. Dr. Sarah Mitchell combines decades of expertise with cutting-edge insights to deliver a masterpiece that will reshape how you think about technology and business transformation.<br><br>
+                            
+                            <strong>🔥 WHY THIS BOOK IS CAPTIVATING READERS WORLDWIDE:</strong><br>
+                            • Actionable strategies you can implement immediately<br>
+                            • Real-world case studies from Fortune 500 companies<br>
+                            • Step-by-step implementation guides<br>
+                            • Future-proof digital frameworks<br><br>
+                            
+                            <strong>💫 PERFECT FOR:</strong> Business leaders, entrepreneurs, and digital innovators who want to stay ahead of the curve.<br><br>
+                            
+                            <strong>📖 READING EXPERIENCE:</strong> Each chapter builds upon the previous one, creating a comprehensive digital transformation strategy that will revolutionize your organization.<br><br>
+                            
+                            <strong>⭐ CRITICAL ACCLAIM:</strong><br>
+                            "The definitive guide to digital transformation" - Harvard Business Review<br>
+                            "A must-read for every business leader" - TechCrunch<br>
+                            "Game-changing insights that actually work" - Forbes
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                        <span class="text-3xl">❤️</span> Why Readers Love This Book
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-r from-pink-50 to-red-50 p-4 rounded-xl border border-pink-200">
+                            <h4 class="font-bold text-pink-800 mb-2">🎨 Practical & Actionable</h4>
+                            <p class="text-gray-700">Every concept comes with real-world examples and step-by-step implementation guides</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200">
+                            <h4 class="font-bold text-blue-800 mb-2">🧠 Future-Focused</h4>
+                            <p class="text-gray-700">Cutting-edge strategies that prepare you for tomorrow's digital challenges</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
+                            <h4 class="font-bold text-green-800 mb-2">✨ Expert Author</h4>
+                            <p class="text-gray-700">Written by a renowned digital transformation expert with proven track record</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-xl border border-purple-200">
+                            <h4 class="font-bold text-purple-800 mb-2">🏆 Award-Winning Content</h4>
+                            <p class="text-gray-700">Recognized as the best business technology book of 2024</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                        <span class="text-3xl">💬</span> What Readers Are Saying
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div class="flex text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
+                            <p class="text-gray-700 italic mb-2">"This book transformed our company's digital strategy. Absolutely brilliant!"</p>
+                            <p class="text-sm text-gray-600 font-semibold">- Michael Chen, CEO</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div class="flex text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
+                            <p class="text-gray-700 italic mb-2">"The most practical digital transformation guide I've ever read. Game-changing!"</p>
+                            <p class="text-sm text-gray-600 font-semibold">- Lisa Rodriguez, CTO</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div class="flex text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
+                            <p class="text-gray-700 italic mb-2">"I've implemented the strategies and seen immediate results. Highly recommended!"</p>
+                            <p class="text-sm text-gray-600 font-semibold">- David Kim, Entrepreneur</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <button class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-10 py-4 rounded-2xl text-lg font-bold shadow-xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2">
+                        <span class="text-2xl">🛒</span> Add to Cart - Transform Now!
+                    </button>
+                    <button class="bg-gradient-to-r from-pink-500 to-red-500 text-white px-10 py-4 rounded-2xl text-lg font-bold shadow-xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2">
+                        <span class="text-2xl">❤️</span> Add to Wishlist
+                    </button>
+                    <button class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-10 py-4 rounded-2xl text-lg font-bold shadow-xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2">
+                        <span class="text-2xl">👁️</span> Preview Sample
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="http://localhost:3000" target="_blank" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition inline-block">
+                🚀 Try Live Application
+            </a>
+        </div>
+    </div>
+</body>
+</html>

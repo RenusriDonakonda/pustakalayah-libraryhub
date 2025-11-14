@@ -40,4 +40,4 @@ API base: `http://localhost:8000`
 ## Notes
 - SQLite database file: `backend_py/library.db` (auto-created)
 - CORS: enabled for all origins (so your current frontend can call it)
-- Passwords stored as bcrypt hashes
+- Passwords stored as plain text

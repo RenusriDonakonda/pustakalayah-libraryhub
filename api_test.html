@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Login API Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test the login API directly
+        async function testLogin() {
+            const results = document.getElementById('results');
+            
+            // Clear any existing demo users to test creation
+            localStorage.removeItem('demo_users');
+            
+            // Test 1: Valid login
+            try {
+                const formData = new FormData();
+                formData.append('username', 'admin');
+                formData.append('password', 'admin123');
+                
+                const response = await fetch('http://localhost:8000/script.js', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'username=admin&password=admin123'
+                });
+                
+                results.innerHTML += '<p>✅ Server accessible</p>';
+            } catch (error) {
+                results.innerHTML += '<p>❌ Server error: ' + error.message + '</p>';
+            }
+            
+            // Test 2: Check demo users creation
+            const users = JSON.parse(localStorage.getItem('demo_users') || '[]');
+            if (users.length > 0) {
+                results.innerHTML += '<p>✅ Demo users created: ' + users.map(u => u.username).join(', ') + '</p>';
+            } else {
+                results.innerHTML += '<p>❌ No demo users found</p>';
+            }
+        }
+        
+        testLogin();
+    </script>
+</body>
+</html>

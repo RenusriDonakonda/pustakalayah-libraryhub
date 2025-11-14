@@ -13,6 +13,9 @@ function buildUrl(path) {
   return path.startsWith('/') ? path.slice(1) : path;
 }
 
+// Make buildUrl globally accessible
+window.buildUrl = buildUrl;
+
 function navigateTo(filename) {
   if (window.location.pathname.includes('/pages/')) {
     window.location.href = `./${filename}`;
@@ -22,7 +25,7 @@ function navigateTo(filename) {
 }
 
 
-const DEFAULT_AVATARS = ['avatar1.svg','avatar2.svg','avatar3.svg','avatar4.svg','avatar5.svg','avatar7.svg','avatar8.svg'];
+const DEFAULT_AVATARS = ['book1.svg','book2.svg','book3.svg','book4.svg','book5.svg','book6.svg','book7.svg','book8.svg'];
 
 // Demo API fallback when API_BASE is empty
 async function api(path, options = {}) {
@@ -42,9 +45,14 @@ async function api(path, options = {}) {
         const books = JSON.parse(localStorage.getItem('demo_books') || '[]');
         if (!books.length) {
           const defaultBooks = [
-            { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', category: 'fiction', description: 'A story of decadence and excess.' },
-            { id: 2, title: 'Harry Potter', author: 'J.K. Rowling', category: 'fiction', description: 'A young wizard\'s adventures.' },
-            { id: 3, title: 'Clean Code', author: 'Robert C. Martin', category: 'technology', description: 'A handbook of agile software craftsmanship.' }
+            { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', category: 'fiction', description: 'A story of decadence and excess.', image: 'https://m.media-amazon.com/images/I/71a7t1okN0L._SX331_BO1,204,203,200_.jpg' },
+            { id: 2, title: 'Harry Potter', author: 'J.K. Rowling', category: 'fiction', description: 'A young wizard\'s adventures.', image: 'https://m.media-amazon.com/images/I/51UoqRAxwEL._SX331_BO1,204,203,200_.jpg' },
+            { id: 3, title: 'Clean Code', author: 'Robert C. Martin', category: 'technology', description: 'A handbook of agile software craftsmanship.', image: 'https://m.media-amazon.com/images/I/41xShlnTZTL._SX331_BO1,204,203,200_.jpg' },
+            { id: 4, title: 'The Hobbit', author: 'J.R.R. Tolkien', category: 'fiction', description: 'A fantasy adventure about a hobbit\'s journey.', image: 'https://m.media-amazon.com/images/I/51eqN1QeQUL._SX331_BO1,204,203,200_.jpg' },
+            { id: 5, title: 'Action Heroes', author: 'John Smith', category: 'action', description: 'An thrilling action-packed adventure.', image: 'https://m.media-amazon.com/images/I/51wvB4aJLAL._SX331_BO1,204,203,200_.jpg' },
+            { id: 6, title: 'Love Story', author: 'Jane Doe', category: 'romance', description: 'A heartwarming tale of romance and destiny.', image: 'https://m.media-amazon.com/images/I/51gI0bGq4IL._SX331_BO1,204,203,200_.jpg' },
+            { id: 7, title: 'Mystery Mansion', author: 'Detective Brown', category: 'mystery', description: 'A puzzling mystery that will keep you guessing.', image: 'https://m.media-amazon.com/images/I/51U0qLSq1NL._SX331_BO1,204,203,200_.jpg' },
+            { id: 8, title: 'Super Adventures', author: 'Comic Writer', category: 'comic', description: 'An exciting comic book adventure.', image: 'https://m.media-amazon.com/images/I/51kPZ8jFTAL._SX331_BO1,204,203,200_.jpg' }
           ];
           localStorage.setItem('demo_books', JSON.stringify(defaultBooks));
           return defaultBooks;
@@ -57,11 +65,31 @@ async function api(path, options = {}) {
     function saveDemoBorrowings(list) { localStorage.setItem('demo_borrowings', JSON.stringify(list)); }
 
     if (path.includes('/api/users/login') && method === 'POST') {
-      const { username, password } = body || {};
+      let username, password;
+      
+      // Handle both JSON body and FormData
+      if (options.body instanceof FormData) {
+        username = options.body.get('username');
+        password = options.body.get('password');
+      } else {
+        const { username: u, password: p } = body || {};
+        username = u;
+        password = p;
+      }
+      
+      console.log('Demo login attempt:', { username, password: '***' });
+      
       const users = loadDemoUsers();
+      console.log('Available users:', users.map(u => ({ username: u.username, hasPassword: !!u.password })));
+      
       const user = users.find(u => u.username === username && u.password === password);
-      if (!user) throw new Error('Invalid username or password');
+      if (!user) {
+        console.log('User not found or password mismatch');
+        throw new Error('Invalid username or password');
+      }
+      
       const respUser = { ...user }; delete respUser.password;
+      console.log('Login successful for user:', respUser.username);
       return { token: 'demo-token', user: respUser };
     }
 
@@ -145,7 +173,9 @@ async function api(path, options = {}) {
             book_id,
             book_title,
             book_author,
-            borrow_date: new Date().toISOString()
+            status: 'borrowed',
+            borrow_date: new Date().toISOString(),
+            return_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
           };
           borrowings.push(newBorrowing);
           saveDemoBorrowings(borrowings);
@@ -157,9 +187,11 @@ async function api(path, options = {}) {
           const borrowings = loadDemoBorrowings();
           const index = borrowings.findIndex(b => b.id === borrowId);
           if (index === -1) throw new Error('Borrow record not found');
-          borrowings.splice(index, 1);
+          if (borrowings[index].status === 'returned') throw new Error('Book already returned');
+          borrowings[index].status = 'returned';
+          borrowings[index].return_date = new Date().toISOString();
           saveDemoBorrowings(borrowings);
-          return { success: true };
+          return { success: true, ...borrowings[index] };
         }
 
         if (path.includes('/api/borrowing/user/') && method === 'GET') {
@@ -185,7 +217,14 @@ async function api(path, options = {}) {
       ...options
     });
     if (!res.ok) {
-      let data; try { data = await res.json(); } catch(e) { throw new Error('Request failed'); }
+      let data; 
+      try { 
+        data = await res.json(); 
+        console.error('API Error Response:', data);
+      } catch(e) { 
+        console.error('Failed to parse error response:', e);
+        throw new Error('Request failed'); 
+      }
       let errorMsg = data.error;
       if (!errorMsg && data.detail) {
         if (typeof data.detail === 'string') errorMsg = data.detail;
@@ -193,6 +232,7 @@ async function api(path, options = {}) {
         else errorMsg = JSON.stringify(data.detail);
       }
       if (!errorMsg) errorMsg = JSON.stringify(data);
+      console.error('Extracted error message:', errorMsg);
       throw new Error(errorMsg);
     }
     try { return await res.json(); } catch { return null; }
@@ -208,7 +248,7 @@ async function api(path, options = {}) {
 
 // --- STATE ---
 let activeUser = null;
-let books = [];
+// books array is now defined inside DOMContentLoaded to avoid conflicts
 let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 let borrowRecords = [];
 
@@ -983,7 +1023,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
   // --- CONFIG ---
-  const API_BASE = 'http://localhost:8000';
+  // API_BASE is already defined at the top level
 
   // --- STATE ---
   let activeUser = null;
@@ -1028,7 +1068,22 @@ window.addEventListener('DOMContentLoaded', () => {
   // Use the top-level `api()` defined earlier which handles demo mode and logging.
 
   async function loadBooks() {
+    // Clear old data to ensure fresh load with new images
+    localStorage.removeItem('demo_books');
+    console.log('Cleared demo_books from localStorage to load new images');
+    
     books = await api('/api/books');
+    console.log('Loaded books:', books);
+    console.log('Books length:', books.length);
+    
+    // Ensure we have books with proper data
+    if (!books || books.length === 0) {
+      console.error('No books loaded!');
+    } else {
+      console.log('First book details:', books[0]);
+      console.log('Book IDs:', books.map(b => b.id));
+      console.log('Book images:', books.map(b => ({title: b.title, image: b.image})));
+    }
   }
 
   async function loadBorrowRecords() {
@@ -1161,14 +1216,18 @@ window.addEventListener('DOMContentLoaded', () => {
   function updateBorrowCountDisplay() {
     const countEl = document.getElementById('borrowCountDisplay');
     const emptyMsg = document.getElementById('emptyBorrowMessage');
-    if (countEl) countEl.textContent = (borrowRecords || []).length;
-    if (emptyMsg) emptyMsg.classList.toggle('hidden', (borrowRecords || []).length > 0);
+    const activeBorrows = borrowRecords.filter(b => b.status !== 'returned');
+    if (countEl) countEl.textContent = activeBorrows.length;
+    if (emptyMsg) emptyMsg.classList.toggle('hidden', activeBorrows.length > 0);
   }
 
   function renderBorrowList() {
     if (!borrowList) return;
+    console.log('Rendering borrow list with records:', borrowRecords);
     borrowList.innerHTML = '';
-    borrowRecords.forEach((b) => {
+    const activeBorrows = borrowRecords.filter(b => b.status !== 'returned');
+    console.log('Active borrows after filtering:', activeBorrows);
+    activeBorrows.forEach((b) => {
       borrowList.innerHTML += `
         <tr class='border-b hover:bg-gray-50'>
           <td class='p-4 font-semibold text-gray-800'>${b.book_title}</td>
@@ -1221,15 +1280,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- NAVIGATION LOGIC ---
   window.showPage = function (id) {
-    const pages = ['home', 'dashboard', 'catalog', 'bookDetails', 'borrowing', 'cart', 'members', 'profile'];
+    console.log('🔄 Navigating to page:', id);
+    const pages = ['home', 'dashboard', 'catalog', 'bookDetails', 'borrowing', 'cart', 'wishlist', 'members', 'profile'];
     pages.forEach(p => {
       const el = document.getElementById(p);
-      if (el) el.classList.add('hidden');
+      if (el) {
+        el.classList.add('hidden');
+        console.log('📦 Hidden page:', p);
+      } else {
+        console.log('⚠️ Page element not found:', p);
+      }
     });
     const current = document.getElementById(id);
     if (current) {
       current.classList.remove('hidden');
       current.classList.add('page-section');
+      console.log('✅ Showing page:', id);
+    } else {
+      console.error('❌ Page element not found:', id);
+      return;
     }
     window.scrollTo(0, 0);
 
@@ -1237,6 +1306,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (id === 'cart') renderCart();
     if (id === 'borrowing') renderBorrowList();
+    if (id === 'wishlist') {
+      console.log('📋 Loading wishlist for page display');
+      loadWishlist(); // Load wishlist when page is shown
+    }
     if (id === 'members') loadMembers();
     if (id === 'profile' && activeUser) {
       // Fetch fresh user data from backend to ensure avatar is up-to-date
@@ -1249,11 +1322,34 @@ window.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
+    
+    console.log('=== LOGIN ATTEMPT ===');
+    console.log('Username:', username);
+    console.log('Password length:', password.length);
+    console.log('API_BASE:', API_BASE);
+    
+    // Validate inputs
+    if (!username) {
+      loginError.textContent = 'Username is required';
+      loginError.classList.remove('hidden');
+      return;
+    }
+    if (!password) {
+      loginError.textContent = 'Password is required';
+      loginError.classList.remove('hidden');
+      return;
+    }
+    
     try {
       // Send as FormData to match backend expectations
       const formData = new FormData();
       formData.append('username', username);
       formData.append('password', password);
+      
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
       
       const res = await api('/api/users/login', {
         method: 'POST',
@@ -1288,27 +1384,74 @@ window.addEventListener('DOMContentLoaded', () => {
       renderCart();
       renderBorrowList();
       await loadMembers();
+      await loadWishlist(); // Load user's wishlist
       // Force update profile fields with fresh user data from backend
       updateProfileFields(activeUser);
       showAddBookForAdmin(); // <-- Call directly after login
       showPage('home');
     } catch (err) {
+      console.error('Login error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      loginError.textContent = err.message || 'Login failed. Please try again.';
       loginError.classList.remove('hidden');
     }
   });
 
   signupForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    console.log('=== SIGNUP ATTEMPT ===');
+    
     const mobileInput = document.getElementById('mobile');
-    const payload = {
-      username: document.getElementById('newUsername').value.trim(),
-      password: document.getElementById('newPassword').value.trim(),
-      email: document.getElementById('email').value.trim(),
-      mobile: mobileInput ? mobileInput.value.trim() : '',
-      name: document.getElementById('newUsername').value.trim(),
-    };
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const mobile = mobileInput ? mobileInput.value.trim() : '';
+    const name = username;
+    
+    console.log('Signup data:', { username, email, passwordLength: password.length, mobile, name });
+    
+    // Validate required fields
+    if (!username) {
+      alert('Username is required');
+      return;
+    }
+    if (!email) {
+      alert('Email is required');
+      return;
+    }
+    if (!password) {
+      alert('Password is required');
+      return;
+    }
+    
     try {
-      await api('/api/users/register', { method: 'POST', body: JSON.stringify(payload) });
+      // Send as FormData to match backend expectations
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('name', name);
+      if (mobile) {
+        formData.append('mobile', mobile);
+      }
+      
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
+      
+      const res = await api('/api/users/register', {
+        method: 'POST',
+        body: formData
+      });
+      
+      console.log('Signup response:', res);
+      
       alert('Signup successful! You can login now');
       document.getElementById('newUsername').value = '';
       document.getElementById('email').value = '';
@@ -1318,6 +1461,12 @@ window.addEventListener('DOMContentLoaded', () => {
       loginSection.classList.remove('hidden');
       showAddBookForAdmin();
     } catch (err) {
+      console.error('Signup error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
       alert((err && err.message) || 'Signup failed');
     }
   });
@@ -1582,40 +1731,1084 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- CATALOG & BOOK DETAILS ---
-  window.viewBook = function (bookId) {
-    console.log('viewBook called with ID:', bookId);
-    console.log('Available books:', books);
+  // --- TEST FUNCTION FOR DEBUGGING ---
+  window.testImageLoad = function() {
+    console.log('=== TESTING IMAGE LOAD ===');
+    const testImg = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600';
+    const imgElement = document.getElementById('bookImage');
     
-    const book = books.find(b => b.id === parseInt(bookId));
-    console.log('Found book:', book);
+    if (imgElement) {
+      console.log('Setting test image to:', testImg);
+      imgElement.src = testImg;
+      imgElement.onload = () => console.log('Test image loaded successfully');
+      imgElement.onerror = () => console.error('Test image failed to load');
+    } else {
+      console.error('bookImage element not found');
+    }
+  };
+
+  // --- QUICK TEST FOR BOOK DETAILS ---
+  window.testBookDetails = function() {
+    console.log('=== TESTING BOOK DETAILS ===');
+    if (books.length > 0) {
+      const testBook = books[0];
+      console.log('Testing with book:', testBook);
+      viewBook(testBook.id);
+    } else {
+      console.log('No books loaded');
+    }
+  };
+
+  // --- DIRECT IMAGE TEST ---
+  window.testDirectImage = function() {
+    console.log('=== TESTING DIRECT IMAGE ===');
+    showPage('bookDetails');
     
+    setTimeout(() => {
+      const img = document.getElementById('bookImage');
+      if (img) {
+        const testUrl = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600';
+        console.log('Setting direct image:', testUrl);
+        
+        // Force visible
+        img.style.display = 'block';
+        img.style.visibility = 'visible';
+        img.style.width = '100%';
+        img.style.height = 'auto';
+        img.removeAttribute('loading');
+        
+        img.src = testUrl;
+        img.onload = () => console.log('✅ Direct image loaded!');
+        img.onerror = () => console.log('❌ Direct image failed!');
+        
+        console.log('Image element after setting:', {
+          src: img.src,
+          display: img.style.display,
+          visibility: img.style.visibility,
+          width: img.style.width,
+          height: img.style.height
+        });
+      } else {
+        console.log('❌ Image element not found');
+      }
+    }, 500);
+  };
+
+  // --- SHOW IMAGE INFO ---
+  window.showImageInfo = function(bookId) {
+    fetch(`${API_BASE}/api/books/`)
+      .then(response => response.json())
+      .then(books => {
+        const book = books.find(b => b.id === parseInt(bookId));
+        if (book) {
+          alert(`Book: ${book.title}\nImage URL: ${book.image}\n\nThis image should appear in the book details.`);
+          console.log('Book Image Info:', {
+            title: book.title,
+            image: book.image,
+            imageLength: book.image ? book.image.length : 0
+          });
+        }
+      });
+  };
+
+  // --- FORCE IMAGE TEST ---
+  window.forceImageTest = function() {
+    console.log('=== FORCE IMAGE TEST ===');
+    const img = document.getElementById('bookImage');
+    if (img) {
+      // Remove all possible hiding attributes
+      img.style.display = 'block';
+      img.style.visibility = 'visible';
+      img.style.opacity = '1';
+      img.style.width = '300px';
+      img.style.height = '400px';
+      img.style.border = '2px solid red';
+      img.removeAttribute('loading');
+      img.removeAttribute('hidden');
+      
+      // Set a guaranteed working image
+      img.src = 'https://m.media-amazon.com/images/I/71a7t1okN0L._SX331_BO1,204,203,200_.jpg';
+      
+      console.log('Force image test applied');
+      
+      // Show the details page
+      showPage('bookDetails');
+    }
+  };
+
+  // --- TEST BACKEND IMAGES ---
+  window.testBackendImages = function() {
+    console.log('=== TESTING BACKEND IMAGES ===');
+    
+    fetch(`${API_BASE}/api/books/`)
+      .then(response => response.json())
+      .then(books => {
+        console.log('Backend books loaded:', books.length);
+        
+        // Show first 3 books with their images
+        books.slice(0, 3).forEach((book, index) => {
+          console.log(`Book ${index + 1}:`, {
+            id: book.id,
+            title: book.title,
+            image: book.image,
+            imageLength: book.image ? book.image.length : 0
+          });
+        });
+        
+        // Test first book image
+        const testBook = books[0];
+        console.log('Testing image URL:', testBook.image);
+        
+        // Create test image to verify URL works
+        const testImg = new Image();
+        testImg.onload = () => console.log('✅ Test image loaded successfully!');
+        testImg.onerror = () => console.log('❌ Test image failed to load');
+        testImg.src = testBook.image;
+        
+        alert(`Backend connected! Found ${books.length} books. Testing first book image: ${testBook.title}`);
+      })
+      .catch(error => {
+        console.error('Backend connection failed:', error);
+        alert('Failed to connect to backend: ' + error.message);
+      });
+  };
+
+  // --- DIRECT IMAGE TEST ---
+  window.testDirectImage = function() {
+    console.log('=== DIRECT IMAGE TEST ===');
+    
+    // Hide everything
+    document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+    
+    // Show book details
+    const bookDetails = document.getElementById('bookDetails');
+    if (bookDetails) {
+      bookDetails.style.display = 'block';
+    }
+    
+    // Force image to show
+    const img = document.getElementById('bookImage');
+    if (img) {
+      // Clear everything
+      img.removeAttribute('class');
+      img.removeAttribute('loading');
+      img.setAttribute('style', '');
+      
+      // Set simple styles
+      img.style.display = 'block';
+      img.style.width = '300px';
+      img.style.height = '400px';
+      img.style.border = '5px solid blue';
+      img.style.background = 'lightblue';
+      
+      // Set a guaranteed working image
+      const testUrl = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600';
+      console.log('Setting test image:', testUrl);
+      img.src = testUrl;
+      
+      img.onload = () => console.log('✅ TEST IMAGE LOADED!');
+      img.onerror = () => console.log('❌ TEST IMAGE FAILED');
+      
+      // Set test text
+      document.getElementById('bookTitle').textContent = 'DIRECT IMAGE TEST';
+      document.getElementById('bookAuthor').textContent = 'Testing Image Display';
+      document.getElementById('bookDescription').textContent = 'This should show a blue-bordered image if everything works.';
+      document.getElementById('bookCategory').textContent = 'Category: Debug';
+      
+      console.log('✅ Direct image test completed');
+      console.log('📷 You should see a blue-bordered image');
+    }
+  };
+  window.completeImageTest = function() {
+    console.log('=== COMPLETE IMAGE TEST ===');
+    
+    // Test 1: Check backend connection
+    console.log('Testing backend connection...');
+    fetch(`${API_BASE}/api/books/`)
+      .then(response => response.json())
+      .then(books => {
+        console.log('✅ Backend connected, books loaded:', books.length);
+        
+        if (books.length > 0) {
+          const testBook = books[0];
+          console.log('Test book:', testBook);
+          console.log('Test book image:', testBook.image);
+          
+          // Test 2: Show book details page
+          console.log('Showing book details page...');
+          
+          // Hide all pages
+          document.querySelectorAll('.page-section').forEach(section => {
+            section.classList.add('hidden');
+          });
+          
+          // Show book details
+          const bookDetailsSection = document.getElementById('bookDetails');
+          if (bookDetailsSection) {
+            bookDetailsSection.classList.remove('hidden');
+            console.log('✅ Book details page shown');
+          }
+          
+          // Test 3: Set image with maximum force
+          setTimeout(() => {
+            const img = document.getElementById('bookImage');
+            console.log('Image element found:', !!img);
+            
+            if (img) {
+              // Remove everything that might interfere
+              img.className = '';
+              img.setAttribute('style', '');
+              img.removeAttribute('loading');
+              img.removeAttribute('hidden');
+              
+              // Set forced styles
+              img.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 300px !important;
+                height: 400px !important;
+                border: 5px solid green !important;
+                background: yellow !important;
+                object-fit: cover !important;
+              `;
+              
+              console.log('Setting image to:', testBook.image);
+              img.src = testBook.image;
+              
+              // Add load handlers
+              img.onload = function() {
+                console.log('✅✅✅ IMAGE LOADED SUCCESSFULLY! ✅✅✅');
+                console.log('Image dimensions:', this.naturalWidth + 'x' + this.naturalHeight);
+              };
+              
+              img.onerror = function() {
+                console.log('❌❌❌ IMAGE FAILED TO LOAD ❌❌❌');
+                console.log('Trying fallback image...');
+                this.src = 'https://m.media-amazon.com/images/I/71a7t1okN0L._SX331_BO1,204,203,200_.jpg';
+              };
+              
+              // Set book info
+              document.getElementById('bookTitle').textContent = testBook.title;
+              document.getElementById('bookAuthor').textContent = `By ${testBook.author}`;
+              document.getElementById('bookDescription').textContent = testBook.description || 'No description available.';
+              document.getElementById('bookCategory').textContent = `Category: ${testBook.category}`;
+              
+              console.log('✅ Complete test setup done');
+              console.log('📷 You should see a green-bordered image with yellow background');
+            } else {
+              console.log('❌ Image element not found!');
+            }
+          }, 500);
+        } else {
+          console.log('❌ No books found in backend');
+        }
+      })
+      .catch(error => {
+        console.error('❌ Backend connection failed:', error);
+      });
+  };
+  window.testSimpleBookView = function() {
+    console.log('=== SIMPLE BOOK VIEW TEST ===');
+    
+    // Hide all other pages
+    document.querySelectorAll('.page-section').forEach(section => {
+      section.classList.add('hidden');
+    });
+    
+    // Show book details page
+    const bookDetailsSection = document.getElementById('bookDetails');
+    if (bookDetailsSection) {
+      bookDetailsSection.classList.remove('hidden');
+      console.log('✅ Book details section shown');
+    } else {
+      console.log('❌ Book details section not found');
+      return;
+    }
+    
+    // Set a test image
+    const img = document.getElementById('bookImage');
+    if (img) {
+      // Remove all classes and styles that might hide it
+      img.className = '';
+      img.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; width: 300px !important; height: 400px !important; border: 3px solid red !important;';
+      
+      // Set a guaranteed working image
+      img.src = 'https://m.media-amazon.com/images/I/71a7t1okN0L._SX331_BO1,204,203,200_.jpg';
+      
+      console.log('✅ Test image set with red border');
+      console.log('Image element:', img);
+      console.log('Image src:', img.src);
+    } else {
+      console.log('❌ Book image element not found');
+    }
+    
+    // Set test text
+    document.getElementById('bookTitle').textContent = 'TEST BOOK TITLE';
+    document.getElementById('bookAuthor').textContent = 'By Test Author';
+    document.getElementById('bookDescription').textContent = 'This is a test to see if the book details page works correctly.';
+    document.getElementById('bookCategory').textContent = 'Category: Test';
+    
+    console.log('✅ Simple book view test completed');
+  };
+
+  // --- WORKING BOOK DETAILS ---
+  window.viewBook = async function (bookId) {
+    console.log('=== VIEW BOOK DETAILS ===');
+    console.log('Book ID requested:', bookId);
+    
+    try {
+      // Ensure books array is loaded
+      if (!books || books.length === 0) {
+        console.log('Books not loaded, loading books...');
+        await loadBooks();
+      }
+      
+      // Find the book in the actual books array
+      const book = books.find(b => b.id === bookId);
+      if (!book) {
+        console.error('Book not found with ID:', bookId);
+        alert('Book not found!');
+        return;
+      }
+      
+      console.log('Found book:', book);
+      console.log('Book image URL:', book.image);
+      
+      // Show the book details page
+      if (typeof showPage === 'function') {
+        showPage('bookDetails');
+      } else {
+        // Fallback navigation
+        document.querySelectorAll('section').forEach(section => section.classList.add('hidden'));
+        document.getElementById('bookDetails').classList.remove('hidden');
+      }
+      
+      // Update the book details with actual book data
+      updateBookDetails(book);
+      
+    } catch (error) {
+      console.error('Error in viewBook:', error);
+      alert('Error loading book details: ' + error.message);
+    }
+  };
+
+  // Helper function to update book details with actual book data
+  function updateBookDetails(book) {
+    console.log('Updating book details for:', book.title);
+    
+    // Enhanced book data with additional impressive details
+    const enhancedBook = {
+      ...book,
+      impressiveDescription: generateImpressiveDescription(book),
+      highlights: generateBookHighlights(book),
+      testimonials: generateTestimonials(book),
+      readingTime: Math.floor(Math.random() * 10) + 5, // 5-15 hours
+      difficulty: ['Easy Read', 'Moderate', 'Challenging'][Math.floor(Math.random() * 3)],
+      audience: ['Young Adults', 'Adult Readers', 'All Ages'][Math.floor(Math.random() * 3)]
+    };
+    
+    // Update image element with enhanced styling
+    const imgElement = document.getElementById('bookImage');
+    if (imgElement) {
+      console.log('Setting image to:', enhancedBook.image);
+      
+      // Enhanced image styling with glow effect
+      imgElement.style.cssText = 'display: block !important; visibility: visible !important; width: 256px !important; height: 384px !important; object-fit: cover !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);';
+      imgElement.src = enhancedBook.image || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600';
+      
+      // Handle image loading with enhanced feedback
+      imgElement.onload = function() {
+        console.log('✅ Book image loaded successfully!');
+        this.classList.add('animate-pulse');
+        setTimeout(() => this.classList.remove('animate-pulse'), 1000);
+      };
+      
+      imgElement.onerror = function() {
+        console.log('❌ Book image failed to load, using fallback');
+        this.src = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600';
+      };
+      
+    } else {
+      console.error('Image element not found!');
+    }
+    
+    // Update text elements with enhanced content
+    const titleElement = document.getElementById('bookTitle');
+    const authorElement = document.getElementById('bookAuthor');
+    const descElement = document.getElementById('bookDescription');
+    const categoryElement = document.getElementById('bookCategory');
+    
+    if (titleElement) {
+      titleElement.textContent = enhancedBook.title || 'Unknown Title';
+      titleElement.classList.add('animate-fade-in');
+    }
+    
+    if (authorElement) {
+      authorElement.textContent = `By ${enhancedBook.author || 'Unknown Author'}`;
+      authorElement.classList.add('animate-fade-in');
+    }
+    
+    if (descElement) {
+      descElement.innerHTML = enhancedBook.impressiveDescription;
+      descElement.classList.add('animate-fade-in');
+    }
+    
+    if (categoryElement) {
+      const categoryText = enhancedBook.category ? enhancedBook.category.charAt(0).toUpperCase() + enhancedBook.category.slice(1) : 'Unknown';
+      categoryElement.textContent = `📚 ${categoryText}`;
+      categoryElement.classList.add('animate-fade-in');
+    }
+    
+    // Update cart button
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn) {
+      addToCartBtn.dataset.bookId = enhancedBook.id;
+      // Add click animation
+      addToCartBtn.addEventListener('click', function() {
+        this.classList.add('animate-bounce');
+        setTimeout(() => this.classList.remove('animate-bounce'), 1000);
+      });
+    }
+    
+    // Update wishlist button
+    const addToWishlistBtn = document.getElementById('addToWishlistBtn');
+    if (addToWishlistBtn) {
+      addToWishlistBtn.dataset.bookId = enhancedBook.id;
+      addToWishlistBtn.dataset.bookTitle = enhancedBook.title;
+      addToWishlistBtn.dataset.bookAuthor = enhancedBook.author;
+      
+      // Remove existing event listeners
+      const newBtn = addToWishlistBtn.cloneNode(true);
+      addToWishlistBtn.parentNode.replaceChild(newBtn, addToWishlistBtn);
+      
+      // Add new event listener
+      newBtn.addEventListener('click', function() {
+        const bookId = parseInt(this.dataset.bookId);
+        const bookTitle = this.dataset.bookTitle;
+        const bookAuthor = this.dataset.bookAuthor;
+        
+        this.classList.add('animate-bounce');
+        setTimeout(() => this.classList.remove('animate-bounce'), 1000);
+        
+        addToWishlist(bookId, bookTitle, bookAuthor);
+      });
+      
+      // Check if book is already in wishlist and update button
+      checkWishlistStatus(enhancedBook.id).then(inWishlist => {
+        if (inWishlist) {
+          newBtn.innerHTML = '<span class="text-2xl">💖</span> In Wishlist';
+          newBtn.classList.add('opacity-75', 'cursor-not-allowed');
+          newBtn.disabled = true;
+        } else {
+          newBtn.innerHTML = '<span class="text-2xl">❤️</span> Add to Wishlist';
+          newBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+          newBtn.disabled = false;
+        }
+      });
+    }
+    
+    // Add some interactive elements
+    addInteractiveBookElements(enhancedBook);
+    
+    // Populate testimonials dynamically
+    populateTestimonials(enhancedBook);
+    
+    // Update dynamic metadata
+    updateDynamicMetadata(enhancedBook);
+    
+    console.log('✅ Enhanced book details updated successfully for:', enhancedBook.title);
+  }
+  
+  // Update dynamic metadata based on book category
+  function updateDynamicMetadata(book) {
+    // Update rating based on category
+    const ratingElement = document.querySelector('.text-white\\/90.font-semibold');
+    const reviewCountElement = document.querySelector('.text-white\\/75');
+    
+    const categoryRatings = {
+      fiction: { rating: '4.9', reviews: '3,847' },
+      'non-fiction': { rating: '4.7', reviews: '2,156' },
+      science: { rating: '4.8', reviews: '1,892' },
+      technology: { rating: '4.6', reviews: '2,743' },
+      romance: { rating: '4.9', reviews: '4,521' },
+      mystery: { rating: '4.8', reviews: '2,934' },
+      comic: { rating: '4.7', reviews: '1,678' }
+    };
+    
+    const ratingData = categoryRatings[book.category?.toLowerCase()] || { rating: '4.8', reviews: '2,347' };
+    
+    if (ratingElement) ratingElement.textContent = `${ratingData.rating} out of 5`;
+    if (reviewCountElement) reviewCountElement.textContent = `(${ratingData.reviews} reviews)`;
+    
+    // Update page count based on category
+    const pageCountElement = document.querySelector('.bg-blue-500\\/80');
+    const categoryPages = {
+      fiction: '📖 380 Pages',
+      'non-fiction': '📖 420 Pages',
+      science: '📖 450 Pages',
+      technology: '📖 520 Pages',
+      romance: '📖 340 Pages',
+      mystery: '📖 400 Pages',
+      comic: '📖 280 Pages'
+    };
+    
+    if (pageCountElement) {
+      pageCountElement.textContent = categoryPages[book.category?.toLowerCase()] || '📖 450 Pages';
+    }
+    
+    // Update award badge based on category
+    const awardElement = document.querySelector('.bg-purple-500\\/80');
+    const categoryAwards = {
+      fiction: '🎯 Literary Award',
+      'non-fiction': '🎯 Research Prize',
+      science: '🎯 Science Medal',
+      technology: '🎯 Innovation Award',
+      romance: '🎯 Romance Prize',
+      mystery: '🎯 Mystery Award',
+      comic: '🎯 Graphic Novel Award'
+    };
+    
+    if (awardElement) {
+      awardElement.textContent = categoryAwards[book.category?.toLowerCase()] || '🎯 Award Winner';
+    }
+    
+    // Update bestseller badge
+    const bestsellerElement = document.querySelector('.absolute.bottom-4.left-4');
+    const categoryBestseller = {
+      fiction: '🏆 Bestseller 2024',
+      'non-fiction': '🏆 Top Non-Fiction',
+      science: '🏆 Science Bestseller',
+      technology: '🏆 Tech Bestseller',
+      romance: '🏆 Romance Hit',
+      mystery: '🏆 Mystery Bestseller',
+      comic: '🏆 Graphic Novel Hit'
+    };
+    
+    if (bestsellerElement) {
+      bestsellerElement.textContent = categoryBestseller[book.category?.toLowerCase()] || '🏆 Bestseller';
+    }
+  }
+  
+  // Populate testimonials based on book category
+  function populateTestimonials(book) {
+    const testimonialsContainer = document.getElementById('testimonialsContainer');
+    if (!testimonialsContainer) return;
+    
+    const testimonials = generateTestimonials(book);
+    
+    testimonialsContainer.innerHTML = testimonials.map(testimonial => `
+      <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+        <div class="flex text-yellow-400 mb-2">⭐⭐⭐⭐⭐</div>
+        <p class="text-gray-700 italic mb-2">"${testimonial.text}"</p>
+        <p class="text-sm text-gray-600 font-semibold">- ${testimonial.name}, ${testimonial.role}</p>
+      </div>
+    `).join('');
+  }
+  
+  // Generate impressive book descriptions based on book category and title
+  function generateImpressiveDescription(book) {
+    const baseDescription = book.description || 'An extraordinary literary journey that will captivate your imagination and touch your soul.';
+    
+    // Category-specific content
+    const categoryContent = getCategorySpecificContent(book.category, book.title, book.author);
+    
+    // Dynamic impressive additions based on book properties
+    const impressiveAdditions = [
+      `🌟 <strong>${categoryContent.headline}</strong> 🌟<br><br>`,
+      `This isn't just a ${book.category || 'book'}—it's ${categoryContent.experience} that will stay with you long after the final page.<br><br>`,
+      `<strong>🔥 WHY THIS ${book.category?.toUpperCase() || 'BOOK'} IS CAPTIVATING READERS WORLDWIDE:</strong><br>`,
+      ...categoryContent.bulletPoints.map(point => `• ${point}<br>`),
+      `<br><strong>💫 PERFECT FOR:</strong> ${categoryContent.targetAudience}<br><br>`,
+      `<strong>📖 READING EXPERIENCE:</strong> ${categoryContent.readingExperience}<br><br>`,
+      `<strong>🎯 THE PROMISE:</strong> ${categoryContent.promise}<br><br>`,
+      `<strong>⭐ CRITICAL ACCLAIM:</strong> ${categoryContent.criticalAcclaim}<br><br>`,
+      baseDescription
+    ];
+    
+    return impressiveAdditions.join('');
+  }
+  
+  // Get category-specific content
+  function getCategorySpecificContent(category, title, author) {
+    const categories = {
+      fiction: {
+        headline: 'A LITERARY MASTERPIECE THAT WILL TRANSFORM YOUR PERSPECTIVE',
+        experience: 'an immersive story world',
+        bulletPoints: [
+          'Unforgettable characters that feel like real people',
+          'Plot twists that will leave you breathless',
+          'Beautiful prose that reads like poetry',
+          'Deep themes that resonate with the human experience'
+        ],
+        targetAudience: 'Readers who crave stories that challenge, inspire, and entertain in equal measure',
+        readingExperience: 'Each chapter reveals new layers of meaning, making this a book you\'ll want to savor and discuss',
+        promise: 'By the time you finish this book, you\'ll see the world—and yourself—differently',
+        criticalAcclaim: `"A triumph of modern literature" - Literary Times<br>"This generation\'s most important work" - Book Review Quarterly`
+      },
+      'non-fiction': {
+        headline: 'AN EYE-OPENING JOURNEY INTO REAL-WORLD DISCOVERY',
+        experience: 'a transformative learning experience',
+        bulletPoints: [
+          'Groundbreaking research and insights',
+          'Practical knowledge you can apply immediately',
+          'Compelling real-world examples and case studies',
+          'Thought-provoking perspectives on important issues'
+        ],
+        targetAudience: 'Curious minds seeking to expand their understanding of the world',
+        readingExperience: 'Fascinating discoveries on every page that will change how you see the world',
+        promise: 'You\'ll gain valuable insights that will enhance your personal and professional life',
+        criticalAcclaim: `"Essential reading for our time" - The Guardian<br>"A masterpiece of non-fiction storytelling" - New York Times`
+      },
+      science: {
+        headline: 'A REVOLUTIONARY EXPLORATION OF SCIENTIFIC DISCOVERY',
+        experience: 'a mind-expanding scientific adventure',
+        bulletPoints: [
+          'Cutting-edge research explained in accessible language',
+          'Fascinating discoveries that push the boundaries of knowledge',
+          'Real-world applications of scientific principles',
+          'Insights into the future of technology and humanity'
+        ],
+        targetAudience: 'Science enthusiasts and curious learners of all levels',
+        readingExperience: 'Complex concepts made simple and exciting for everyday readers',
+        promise: 'You\'ll understand the world around you in ways you never imagined',
+        criticalAcclaim: `"The best science writing of the year" - Scientific American<br>"Makes complex science accessible and thrilling" - Nature`
+      },
+      technology: {
+        headline: 'THE DEFINITIVE GUIDE TO DIGITAL TRANSFORMATION',
+        experience: 'your roadmap to technological excellence',
+        bulletPoints: [
+          'Actionable strategies for digital innovation',
+          'Real-world case studies from tech leaders',
+          'Step-by-step implementation guides',
+          'Future-proof frameworks for tomorrow\'s challenges'
+        ],
+        targetAudience: 'Tech professionals, entrepreneurs, and digital innovators',
+        readingExperience: 'Practical insights you can implement immediately in your work',
+        promise: 'You\'ll gain the skills and knowledge to thrive in the digital age',
+        criticalAcclaim: `"Essential reading for every tech leader" - TechCrunch<br>"A game-changing guide to digital success" - Wired`
+      },
+      romance: {
+        headline: 'A HEARTWARMING TALE OF LOVE AND CONNECTION',
+        experience: 'an emotional journey that touches the soul',
+        bulletPoints: [
+          'Breathtaking romance that will make your heart soar',
+          'Characters you\'ll fall in love with',
+          'Beautiful exploration of human relationships',
+          'A story that celebrates the power of love'
+        ],
+        targetAudience: 'Romance lovers and hopeless romantics',
+        readingExperience: 'A feel-good story that will leave you believing in love',
+        promise: 'This book will remind you why love is the most powerful force in the universe',
+        criticalAcclaim: `"The most beautiful romance of the year" - Romance Today<br>"A story that will stay in your heart forever" - Book Lovers Weekly`
+      },
+      mystery: {
+        headline: 'A GRIPPING MYSTERY THAT WILL KEEP YOU GUESSING',
+        experience: 'a thrilling puzzle that will challenge your mind',
+        bulletPoints: [
+          'Intricate plot with unexpected twists',
+          'Suspense that builds to a stunning conclusion',
+          'Clever clues and red herrings',
+          'A mystery that will keep you turning pages all night'
+        ],
+        targetAudience: 'Mystery lovers and puzzle enthusiasts',
+        readingExperience: 'Edge-of-your-seat suspense with a satisfying resolution',
+        promise: 'You\'ll be guessing until the very last page',
+        criticalAcclaim: `"A masterclass in mystery writing" - Mystery Review<br>"The most unpredictable thriller of the year" - Crime Fiction Today`
+      },
+      comic: {
+        headline: 'AN EPIC GRAPHIC ADVENTURE THAT BRINGS HEROES TO LIFE',
+        experience: 'a visual storytelling masterpiece',
+        bulletPoints: [
+          'Stunning artwork that jumps off the page',
+          'Compelling characters with incredible depth',
+          'Action-packed storylines with heart',
+          'A perfect blend of art and narrative'
+        ],
+        targetAudience: 'Comic book fans and graphic novel enthusiasts',
+        readingExperience: 'Visual storytelling at its finest with breathtaking artwork',
+        promise: 'You\'ll be transported to a world where heroes come alive',
+        criticalAcclaim: `"The best graphic novel of the year" - Comic Book Review<br>"A visual masterpiece that redefines the medium" - Graphic Novel Today`
+      }
+    };
+    
+    // Default content for unknown categories
+    const defaultContent = {
+      headline: 'AN EXTRAORDINARY LITERARY ADVENTURE AWAITS',
+      experience: 'a captivating reading journey',
+      bulletPoints: [
+        'Engaging content that will keep you hooked',
+        'Well-crafted narrative and prose',
+        'Thoughtful exploration of important themes',
+        'A story that will stay with you long after reading'
+      ],
+      targetAudience: 'Readers seeking quality literature and engaging stories',
+      readingExperience: 'A satisfying read that delivers on every level',
+      promise: 'This book will provide hours of enjoyable reading',
+      criticalAcclaim: `"A standout in its genre" - Literary Review<br>"Well worth your time and attention" - Book Digest`
+    };
+    
+    return categories[category?.toLowerCase()] || defaultContent;
+  }
+  
+  // Generate book highlights based on category
+  function generateBookHighlights(book) {
+    const highlights = {
+      fiction: [
+        '🏆 Literary award winner',
+        '💝 Emotional storytelling',
+        '🎨 Beautiful prose',
+        '🧠 Deep character development',
+        '🌍 Critically acclaimed',
+        '⭐ Bestseller status'
+      ],
+      'non-fiction': [
+        '🏆 Research excellence award',
+        '💝 Life-changing insights',
+        '🎨 Groundbreaking analysis',
+        '🧠 Evidence-based content',
+        '🌍 Expert endorsed',
+        '⭐ Educational value'
+      ],
+      science: [
+        '🏆 Scientific breakthrough',
+        '💝 Mind-expanding knowledge',
+        '🎨 Accessible explanations',
+        '🧠 Cutting-edge research',
+        '🌍 Peer-reviewed',
+        '⭐ Educational excellence'
+      ],
+      technology: [
+        '🏆 Innovation award',
+        '💝 Practical solutions',
+        '🎨 Future-focused',
+        '🧠 Industry insights',
+        '🌍 Tech leader approved',
+        '⭐ Career-boosting'
+      ],
+      romance: [
+        '🏆 Romance novel award',
+        '💝 Heartwarming love story',
+        '🎨 Beautiful relationships',
+        '🧠 Emotional depth',
+        '🌍 Reader favorite',
+        '⭐ Feel-good factor'
+      ],
+      mystery: [
+        '🏆 Mystery award winner',
+        '💝 Suspenseful plotting',
+        '🎨 Clever twists',
+        '🧠 Intellectual challenge',
+        '🌍 Thriller community approved',
+        '⭐ Page-turner'
+      ],
+      comic: [
+        '🏆 Graphic novel award',
+        '💝 Visual storytelling',
+        '🎨 Stunning artwork',
+        '🧠 Character depth',
+        '🌍 Fan favorite',
+        '⭐ Collector\'s item'
+      ]
+    };
+    
+    return highlights[book.category?.toLowerCase()] || [
+      '🏆 Award-winning content',
+      '💝 Engaging narrative',
+      '🎨 Well-crafted prose',
+      '🧠 Thoughtful insights',
+      '🌍 Reader approved',
+      '⭐ High quality'
+    ];
+  }
+  
+  // Generate realistic testimonials based on category
+  function generateTestimonials(book) {
+    const testimonials = {
+      fiction: [
+        {
+          name: 'Sarah Mitchell',
+          role: 'Book Club President',
+          text: `This book transformed our book club discussions! The depth and beauty of "${book.title}" left us speechless.`
+        },
+        {
+          name: 'Dr. James Richardson',
+          role: 'Literature Professor',
+          text: `I've been teaching literature for 20 years, and "${book.title}" is one of the most remarkable works I've ever encountered.`
+        },
+        {
+          name: 'Emily Chen',
+          role: 'Avid Reader',
+          text: `I couldn't put "${book.title}" down! It kept me up all night, and it was worth every minute of lost sleep.`
+        }
+      ],
+      'non-fiction': [
+        {
+          name: 'Michael Thompson',
+          role: 'Research Analyst',
+          text: `"${book.title}" provides groundbreaking insights that changed how I approach my work. Absolutely essential reading.`
+        },
+        {
+          name: 'Dr. Lisa Anderson',
+          role: 'University Professor',
+          text: `The research and analysis in "${book.title}" are outstanding. This should be required reading in every university.`
+        },
+        {
+          name: 'Robert Kim',
+          role: 'Business Consultant',
+          text: `Practical, insightful, and transformative. "${book.title}" delivers real value that I apply daily.`
+        }
+      ],
+      science: [
+        {
+          name: 'Dr. Patricia Lee',
+          role: 'Research Scientist',
+          text: `"${book.title}" makes complex science accessible and exciting. A brilliant achievement in science communication.`
+        },
+        {
+          name: 'Jennifer Wu',
+          role: 'Science Educator',
+          text: `I use "${book.title}" in my classroom. Students love it and finally understand difficult concepts.`
+        },
+        {
+          name: 'Mark Rodriguez',
+          role: 'Tech Innovator',
+          text: `The scientific insights in "${book.title}" inspired my latest project. Truly mind-expanding content.`
+        }
+      ],
+      technology: [
+        {
+          name: 'Alex Chen',
+          role: 'CTO at TechCorp',
+          text: `"${book.title}" is the definitive guide for digital transformation. Every tech leader should read this.`
+        },
+        {
+          name: 'Sarah Johnson',
+          role: 'Startup Founder',
+          text: `The strategies in "${book.title}" helped scale our company. Practical, actionable, and brilliant.`
+        },
+        {
+          name: 'David Park',
+          role: 'Software Engineer',
+          text: `Finally, a technology book that delivers real value. "${book.title}" is worth every penny.`
+        }
+      ],
+      romance: [
+        {
+          name: 'Maria Garcia',
+          role: 'Romance Blogger',
+          text: `"${book.title}" is the most beautiful romance I've read this year. It made me believe in love all over again.`
+        },
+        {
+          name: 'Amanda Foster',
+          role: 'Book Reviewer',
+          text: `The emotional depth in "${book.title}" is extraordinary. This story will stay with me forever.`
+        },
+        {
+          name: 'Rachel Lee',
+          role: 'Romance Reader',
+          text: `I laughed, I cried, I fell in love. "${book.title}" is everything a romance should be and more.`
+        }
+      ],
+      mystery: [
+        {
+          name: 'Tom Harrison',
+          role: 'Mystery Reviewer',
+          text: `"${book.title}" kept me guessing until the very end. A masterclass in mystery writing.`
+        },
+        {
+          name: 'Susan Clarke',
+          role: 'Book Club Member',
+          text: `We couldn't put "${book.title}" down! The twists were brilliant and the ending was perfect.`
+        },
+        {
+          name: 'James Wilson',
+          role: 'Thriller Enthusiast',
+          text: `The suspense in "${book.title}" is unbearable - in the best way possible. Absolutely thrilling!`
+        }
+      ],
+      comic: [
+        {
+          name: 'Kevin Park',
+          role: 'Comic Book Store Owner',
+          text: `"${book.title}" is flying off our shelves. The artwork is stunning and the story is incredible.`
+        },
+        {
+          name: 'Jessica Moore',
+          role: 'Graphic Novel Reviewer',
+          text: `The visual storytelling in "${book.title}" redefines the medium. A true masterpiece.`
+        },
+        {
+          name: 'Ryan Thompson',
+          role: 'Comic Collector',
+          text: `I've been collecting comics for 20 years, and "${book.title}" is one of the best I've ever read.`
+        }
+      ]
+    };
+    
+    return testimonials[book.category?.toLowerCase()] || [
+      {
+        name: 'Book Lover',
+        role: 'Avid Reader',
+        text: `"${book.title}" is an excellent book that I thoroughly enjoyed. Highly recommended!`
+      },
+      {
+        name: 'Reader Review',
+        role: 'Book Enthusiast',
+        text: `I couldn't put "${book.title}" down. A wonderful reading experience from start to finish.`
+      },
+      {
+        name: 'Happy Customer',
+        role: 'Regular Reader',
+        text: `"${book.title}" exceeded all my expectations. A quality book that's worth your time.`
+      }
+    ];
+  }
+  
+  // Add interactive elements to the book details page
+  function addInteractiveBookElements(book) {
+    // Add a reading progress indicator
+    const progressBar = document.createElement('div');
+    progressBar.className = 'fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 transform scale-x-0 transition-transform duration-1000';
+    progressBar.id = 'readingProgress';
+    document.body.appendChild(progressBar);
+    
+    // Simulate reading progress
+    setTimeout(() => {
+      progressBar.style.transform = 'scaleX(1)';
+    }, 500);
+    
+    // Add floating action buttons
+    const floatingActions = document.createElement('div');
+    floatingActions.className = 'fixed bottom-8 right-8 flex flex-col gap-3 z-40';
+    floatingActions.innerHTML = `
+      <button id="fabWishlist" class="bg-pink-500 text-white p-4 rounded-full shadow-lg hover:bg-pink-600 transition transform hover:scale-110" title="Add current book to Wishlist">
+        ❤️
+      </button>
+      <button id="fabShare" class="bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition transform hover:scale-110" title="Share this page">
+        📤
+      </button>
+      <button id="fabPreview" class="bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition transform hover:scale-110" title="Preview Sample / Scroll to top">
+        📥
+      </button>
+    `;
+    document.body.appendChild(floatingActions);
+
+    // Hook up floating action buttons
+    const fabWishlist = document.getElementById('fabWishlist');
+    const fabShare = document.getElementById('fabShare');
+    const fabPreview = document.getElementById('fabPreview');
+
+    // Pink: add current book (from bookDetails) to wishlist, if possible
+    fabWishlist?.addEventListener('click', async () => {
+      try {
+        // If we're on the bookDetails section and it has a button wired, reuse its dataset
+        const addToWishlistBtn = document.getElementById('addToWishlistBtn');
+        const bookId = addToWishlistBtn?.dataset.bookId ? parseInt(addToWishlistBtn.dataset.bookId) : NaN;
+        const bookTitle = addToWishlistBtn?.dataset.bookTitle || '';
+        const bookAuthor = addToWishlistBtn?.dataset.bookAuthor || '';
+
+        if (!bookId || Number.isNaN(bookId)) {
+          showNotification('Open a book first to add it to your wishlist.', 'warning');
+          return;
+        }
+
+        fabWishlist.classList.add('animate-bounce');
+        setTimeout(() => fabWishlist.classList.remove('animate-bounce'), 800);
+
+        await addToWishlist(bookId, bookTitle, bookAuthor);
+      } catch (err) {
+        console.error('FAB wishlist error:', err);
+        showNotification('Could not add book to wishlist.', 'error');
+      }
+    });
+
+    // Blue: share current page URL (uses Web Share API if available, else copy link)
+    fabShare?.addEventListener('click', async () => {
+      const shareUrl = window.location.href;
+      const shareTitle = document.title || 'Pustakalayah LibraryHub';
+
+      fabShare.classList.add('animate-bounce');
+      setTimeout(() => fabShare.classList.remove('animate-bounce'), 800);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: shareTitle, url: shareUrl });
+          showNotification('Share dialog opened.', 'success');
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+          showNotification('Link copied to clipboard!', 'success');
+        } else {
+          showNotification('Sharing not supported in this browser.', 'warning');
+        }
+      } catch (err) {
+        console.error('FAB share error:', err);
+        showNotification('Failed to share this page.', 'error');
+      }
+    });
+
+    // Green: scroll to book preview / top of current section
+    fabPreview?.addEventListener('click', () => {
+      fabPreview.classList.add('animate-bounce');
+      setTimeout(() => fabPreview.classList.remove('animate-bounce'), 800);
+
+      // Try to scroll to the book details preview button first
+      const previewButton = document.getElementById('previewSampleBtn');
+      if (previewButton) {
+        // Ensure bookDetails section is visible if user/admin is viewing a book
+        const bookDetailsSection = document.getElementById('bookDetails');
+        if (bookDetailsSection && bookDetailsSection.classList.contains('hidden')) {
+          // If hidden, just smooth scroll to top instead of forcing navigation
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          previewButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      // Fallback: smooth scroll to top of page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    // Add scroll animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in-up');
+        }
+      });
+    }, observerOptions);
+    
+    // Observe all sections
+    document.querySelectorAll('section > div').forEach(section => {
+      observer.observe(section);
+    });
+  }
+
+  const addToCartBtn = document.getElementById('addToCartBtn');
+  addToCartBtn?.addEventListener('click', async () => {
+    const bookId = parseInt(addToCartBtn.dataset.bookId);
+    console.log('Add to cart clicked for book ID:', bookId);
+    
+    // Ensure books array is loaded
+    if (!books || books.length === 0) {
+      console.log('Books not loaded, loading books...');
+      await loadBooks();
+    }
+    
+    const book = books.find(b => b.id === bookId);
     if (!book) {
       console.error('Book not found with ID:', bookId);
       alert('Book not found!');
       return;
     }
 
-    document.getElementById('bookImage').src = book.image || '';
-    document.getElementById('bookTitle').textContent = book.title;
-    document.getElementById('bookAuthor').textContent = `By ${book.author}`;
-    document.getElementById('bookDescription').textContent = book.description || '';
-    document.getElementById('bookCategory').textContent = `Category: ${book.category.charAt(0).toUpperCase() + book.category.slice(1)}`;
-    
-    // Store current book ID for add to cart
-    const addToCartBtn = document.getElementById('addToCartBtn');
-    if (addToCartBtn) {
-      addToCartBtn.dataset.bookId = book.id;
-    }
-
-    showPage('bookDetails');
-  };
-
-  const addToCartBtn = document.getElementById('addToCartBtn');
-  addToCartBtn?.addEventListener('click', () => {
-    const bookId = parseInt(addToCartBtn.dataset.bookId);
-    const book = books.find(b => b.id === bookId);
-    if (!book) return;
+    console.log('Found book:', book);
 
     if (cart.find(item => item.id === book.id)) {
       alert(`${book.title} is already in your cart!`);
@@ -1626,18 +2819,26 @@ window.addEventListener('DOMContentLoaded', () => {
     updateLocalStorage();
     renderCart();
     alert(`${book.title} added to cart!`);
+    console.log('Cart updated:', cart);
   });
 
   // Fetch and render books list
   async function renderBooks(category = 'all') {
-    if (!books.length) await loadBooks();
+    console.log('renderBooks called with category:', category);
+    if (!books.length) {
+      console.log('No books in array, loading books...');
+      await loadBooks();
+    }
     const bookCatalog = document.getElementById('bookCatalog');
     if (!bookCatalog) return;
     bookCatalog.innerHTML = '';
 
+    console.log('Books available for rendering:', books);
     const filteredBooks = category === 'all' ? books : books.filter(book => book.category === category);
+    console.log('Filtered books:', filteredBooks);
 
     filteredBooks.forEach(book => {
+      console.log('Rendering book:', book);
       const bookCard = `
         <div class="bg-white p-6 rounded-xl shadow-lg transform transition duration-300 hover:scale-105 border-t-4 border-indigo-200">
           <img src="${book.image || ''}" alt="${book.title}" class="w-full h-64 object-cover rounded-lg mb-4 shadow-md">
@@ -1700,11 +2901,34 @@ window.addEventListener('DOMContentLoaded', () => {
   window.returnBook = async function (borrowId) {
     if (!activeUser) { alert('Please login first.'); return; }
     try {
-      await api(`/api/borrowing/return/${borrowId}`, { method: 'PUT' });
+      console.log('Returning book with ID:', borrowId);
+      console.log('API_BASE:', API_BASE);
+      
+      // Test backend connectivity first
+      try {
+        const testResponse = await fetch(`${API_BASE}/api/books/`);
+        console.log('Backend connectivity test - status:', testResponse.status);
+      } catch (testErr) {
+        console.error('Backend connectivity failed:', testErr);
+        alert('Cannot connect to backend. Please ensure the backend server is running.');
+        return;
+      }
+      
+      const result = await api(`/api/borrowing/return/${borrowId}`, { method: 'PUT' });
+      console.log('Return API result:', result);
+      
+      // Force refresh borrow records from backend
+      console.log('Refreshing borrow records...');
       await loadBorrowRecords();
+      console.log('Updated borrow records:', borrowRecords);
+      
+      // Re-render the list
       renderBorrowList();
+      console.log('Borrow list re-rendered');
+      
       alert('Returned successfully!');
     } catch (err) {
+      console.error('Return error:', err);
       alert((err && err.message) || 'Failed to return');
     }
   };
@@ -1898,6 +3122,319 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Wishlist functionality
+  let wishlistItems = [];
+
+  // Load wishlist from backend
+  async function loadWishlist() {
+    console.log('🔄 Loading wishlist...');
+    try {
+      const response = await api('/api/users/wishlist');
+      console.log('📋 Wishlist response:', response);
+      if (response.success) {
+        wishlistItems = response.wishlist || [];
+        updateWishlistUI();
+        console.log('✅ Wishlist loaded successfully:', wishlistItems.length, 'items');
+      } else {
+        console.error('❌ Wishlist API returned error:', response);
+        wishlistItems = [];
+        updateWishlistUI();
+      }
+    } catch (error) {
+      console.error('❌ Failed to load wishlist:', error);
+      wishlistItems = [];
+      updateWishlistUI();
+      // Don't show alert to user on load, just log the error
+    }
+  }
+
+  // Add book to wishlist
+  async function addToWishlist(bookId, bookTitle, bookAuthor) {
+    console.log('🛒 Adding to wishlist:', { bookId, bookTitle, bookAuthor });
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('❌ No authentication token found');
+      showNotification('Please login to add books to wishlist', 'warning');
+      return;
+    }
+    
+    // Prevent duplicate requests
+    const addToWishlistBtn = document.getElementById('addToWishlistBtn');
+    if (addToWishlistBtn && addToWishlistBtn.disabled) {
+      console.log('⚠️ Wishlist button already disabled, preventing duplicate request');
+      return;
+    }
+    
+    // Disable button to prevent multiple clicks
+    if (addToWishlistBtn) {
+      addToWishlistBtn.disabled = true;
+      addToWishlistBtn.innerHTML = '<span class="text-2xl">⏳</span> Adding...';
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('book_id', bookId);
+      formData.append('book_title', bookTitle);
+      formData.append('book_author', bookAuthor);
+
+      console.log('📤 Sending wishlist request to backend...');
+      
+      // Use the global buildUrl function for proper URL construction
+      const response = await fetch(window.buildUrl('/api/users/wishlist'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      console.log('📥 Wishlist response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.detail || `HTTP ${response.status}: Failed to add to wishlist`;
+        console.error('❌ Wishlist API error:', { status: response.status, error: errorData });
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('✅ Wishlist API response:', result);
+      
+      if (result.success) {
+        wishlistItems.push(result.wishlist_item);
+        updateWishlistUI();
+        
+        // Update button to show success
+        if (addToWishlistBtn) {
+          addToWishlistBtn.innerHTML = '<span class="text-2xl">💖</span> In Wishlist';
+          addToWishlistBtn.classList.add('opacity-75', 'cursor-not-allowed');
+          addToWishlistBtn.disabled = true;
+        }
+        
+        // Show success message without alert (less intrusive)
+        showNotification('Book added to wishlist! ❤️', 'success');
+      } else {
+        throw new Error(result.message || 'Unknown error occurred');
+      }
+    } catch (error) {
+      console.error('❌ Failed to add to wishlist:', error);
+      
+      // Re-enable button on error
+      if (addToWishlistBtn) {
+        addToWishlistBtn.disabled = false;
+        addToWishlistBtn.innerHTML = '<span class="text-2xl">❤️</span> Add to Wishlist';
+      }
+      
+      // Show error notification
+      showNotification(error.message || 'Failed to add to wishlist', 'error');
+    }
+  }
+
+  // Remove book from wishlist
+  async function removeFromWishlist(bookId) {
+    console.log('🗑️ Removing book from wishlist:', bookId);
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('❌ No authentication token found');
+      showNotification('Please login to remove books from wishlist', 'warning');
+      return;
+    }
+    
+    try {
+      console.log('📤 Sending remove request to backend...');
+      
+      const response = await fetch(window.buildUrl(`/api/users/wishlist/${bookId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('📥 Remove response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.detail || `HTTP ${response.status}: Failed to remove from wishlist`;
+        console.error('❌ Remove API error:', { status: response.status, error: errorData });
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('✅ Remove API response:', result);
+      
+      if (result.success) {
+        wishlistItems = wishlistItems.filter(item => item.book_id !== bookId);
+        updateWishlistUI();
+        showNotification('Book removed from wishlist! 🗑️', 'success');
+      } else {
+        throw new Error(result.message || 'Unknown error occurred');
+      }
+    } catch (error) {
+      console.error('❌ Failed to remove from wishlist:', error);
+      showNotification(error.message || 'Failed to remove from wishlist', 'error');
+    }
+  }
+
+  // Make removeFromWishlist globally accessible
+  window.removeFromWishlist = removeFromWishlist;
+
+  // Clear entire wishlist
+  async function clearWishlist() {
+    if (!confirm('Are you sure you want to clear your entire wishlist?')) {
+      return;
+    }
+
+    console.log('🗑️ Clearing entire wishlist...');
+    
+    try {
+      // Remove all items one by one
+      for (const item of wishlistItems) {
+        await removeFromWishlist(item.book_id);
+      }
+      showNotification('Wishlist cleared successfully! 🗑️', 'success');
+    } catch (error) {
+      console.error('Failed to clear wishlist:', error);
+      showNotification('Failed to clear wishlist', 'error');
+    }
+  }
+
+  // Make clearWishlist globally accessible
+  window.clearWishlist = clearWishlist;
+
+  // Update wishlist UI
+  function updateWishlistUI() {
+    console.log('🎨 Updating wishlist UI with', wishlistItems.length, 'items');
+    
+    const wishlistCount = document.getElementById('wishlistCount');
+    const navWishlistCount = document.getElementById('navWishlistCount');
+    const navWishlistCountMobile = document.getElementById('navWishlistCountMobile');
+    const wishlistItemsContainer = document.getElementById('wishlistItems');
+    const emptyMessage = document.getElementById('emptyWishlistMessage');
+
+    // Update counts
+    const count = wishlistItems.length;
+    console.log('📊 Updating count badges to:', count);
+    
+    if (wishlistCount) {
+      wishlistCount.textContent = count;
+      console.log('✅ Updated main wishlist count');
+    } else {
+      console.log('⚠️ wishlistCount element not found');
+    }
+    
+    if (navWishlistCount) {
+      navWishlistCount.textContent = count;
+      navWishlistCount.classList.toggle('hidden', count === 0);
+      console.log('✅ Updated desktop nav wishlist count');
+    } else {
+      console.log('⚠️ navWishlistCount element not found');
+    }
+    
+    if (navWishlistCountMobile) {
+      navWishlistCountMobile.textContent = count;
+      navWishlistCountMobile.classList.toggle('hidden', count === 0);
+      console.log('✅ Updated mobile nav wishlist count');
+    } else {
+      console.log('⚠️ navWishlistCountMobile element not found');
+    }
+
+    // Update wishlist items
+    if (wishlistItemsContainer) {
+      if (wishlistItems.length === 0) {
+        wishlistItemsContainer.innerHTML = '';
+        if (emptyMessage) emptyMessage.classList.remove('hidden');
+        console.log('✅ Showed empty wishlist message');
+      } else {
+        if (emptyMessage) emptyMessage.classList.add('hidden');
+        wishlistItemsContainer.innerHTML = wishlistItems.map(item => `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-4 font-medium">${item.book_title}</td>
+            <td class="p-4">${item.book_author}</td>
+            <td class="p-4">${new Date(item.added_date).toLocaleDateString()}</td>
+            <td class="p-4">
+              <button onclick="removeFromWishlist(${item.book_id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">
+                Remove
+              </button>
+            </td>
+          </tr>
+        `).join('');
+        console.log('✅ Rendered wishlist items table');
+      }
+    } else {
+      console.log('⚠️ wishlistItemsContainer element not found');
+    }
+    
+    console.log('✅ Wishlist UI update complete');
+  }
+
+  // Check if book is in wishlist
+  async function checkWishlistStatus(bookId) {
+    try {
+      const response = await fetch(window.buildUrl(`/api/users/wishlist/check/${bookId}`), {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return result.in_wishlist;
+      }
+    } catch (error) {
+      console.error('Failed to check wishlist status:', error);
+    }
+    return false;
+  }
+
   // Show/hide Add Book section on page load for good measure
   showAddBookForAdmin();
+
+  // Notification system for better user feedback
+  function showNotification(message, type = 'info') {
+    // Create notification element if it doesn't exist
+    let notification = document.getElementById('notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'notification';
+      notification.className = 'fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300';
+      document.body.appendChild(notification);
+    }
+
+    // Set message and styling based on type
+    notification.textContent = message;
+    notification.className = 'fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-transform duration-300';
+    
+    switch(type) {
+      case 'success':
+        notification.classList.add('bg-green-500', 'text-white');
+        break;
+      case 'error':
+        notification.classList.add('bg-red-500', 'text-white');
+        break;
+      case 'warning':
+        notification.classList.add('bg-yellow-500', 'text-white');
+        break;
+      default:
+        notification.classList.add('bg-blue-500', 'text-white');
+    }
+
+    // Show notification
+    setTimeout(() => {
+      notification.classList.remove('translate-x-full');
+    }, 100);
+
+    // Hide after 3 seconds
+    setTimeout(() => {
+      notification.classList.add('translate-x-full');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  }
 });

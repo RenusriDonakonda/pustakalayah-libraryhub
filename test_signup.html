@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Signup Functionality Test</h1>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Signup Form</h2>
+            <form id="testSignupForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Username:</label>
+                    <input type="text" id="testUsername" placeholder="Enter username" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="testEmail" placeholder="Enter email" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password:</label>
+                    <input type="password" id="testPassword" placeholder="Enter password" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Mobile (Optional):</label>
+                    <input type="tel" id="testMobile" placeholder="Enter mobile number" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full">
+                    Test Signup
+                </button>
+            </form>
+            <div id="testResult" class="mt-4"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Quick Test Templates</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="fillTemplate('valid')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    Fill Valid Data
+                </button>
+                <button onclick="fillTemplate('duplicate')" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700">
+                    Fill Duplicate User
+                </button>
+                <button onclick="fillTemplate('invalid')" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                    Fill Invalid Data
+                </button>
+                <button onclick="clearForm()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                    Clear Form
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Debug Log</h2>
+            <div id="debugLog" class="font-mono text-sm bg-gray-50 p-4 rounded max-h-96 overflow-y-auto"></div>
+            <button onclick="clearLog()" class="mt-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                Clear Log
+            </button>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <a href="http://localhost:3000" target="_blank" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block">
+                Test in Main Application
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function log(message) {
+            const debugLog = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+        }
+        
+        function fillTemplate(type) {
+            const timestamp = Date.now();
+            switch(type) {
+                case 'valid':
+                    document.getElementById('testUsername').value = `user${timestamp}`;
+                    document.getElementById('testEmail').value = `user${timestamp}@example.com`;
+                    document.getElementById('testPassword').value = 'password123';
+                    document.getElementById('testMobile').value = '1234567890';
+                    break;
+                case 'duplicate':
+                    document.getElementById('testUsername').value = 'admin';
+                    document.getElementById('testEmail').value = 'admin@library.com';
+                    document.getElementById('testPassword').value = 'admin123';
+                    document.getElementById('testMobile').value = '';
+                    break;
+                case 'invalid':
+                    document.getElementById('testUsername').value = '';
+                    document.getElementById('testEmail').value = 'invalid-email';
+                    document.getElementById('testPassword').value = '';
+                    document.getElementById('testMobile').value = '';
+                    break;
+            }
+            log(`Filled template: ${type}`);
+        }
+        
+        function clearForm() {
+            document.getElementById('testSignupForm').reset();
+            log('Form cleared');
+        }
+        
+        async function testSignup(username, email, password, mobile) {
+            log('Starting signup test...');
+            log(`Username: ${username}`);
+            log(`Email: ${email}`);
+            log(`Password length: ${password.length}`);
+            log(`Mobile: ${mobile || 'not provided'}`);
+            
+            // Validate required fields
+            if (!username) {
+                throw new Error('Username is required');
+            }
+            if (!email) {
+                throw new Error('Email is required');
+            }
+            if (!password) {
+                throw new Error('Password is required');
+            }
+            
+            try {
+                // Create FormData exactly like the main app
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('name', username);
+                if (mobile) {
+                    formData.append('mobile', mobile);
+                }
+                
+                log('FormData created:');
+                for (let [key, value] of formData.entries()) {
+                    log(`  ${key}: ${value}`);
+                }
+                
+                const url = `${API_BASE}/api/users/register`;
+                log(`Sending request to: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                log(`Response status: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    log(`Error response: ${JSON.stringify(errorData)}`);
+                    throw new Error(errorData.detail || errorData.message || 'Signup failed');
+                }
+                
+                const data = await response.json();
+                log(`Success response: ${JSON.stringify(data)}`);
+                
+                return data;
+                
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                log(`Stack: ${error.stack}`);
+                throw error;
+            }
+        }
+        
+        document.getElementById('testSignupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = document.getElementById('testResult');
+            const username = document.getElementById('testUsername').value.trim();
+            const email = document.getElementById('testEmail').value.trim();
+            const password = document.getElementById('testPassword').value.trim();
+            const mobile = document.getElementById('testMobile').value.trim();
+            
+            result.innerHTML = '<p class="text-blue-600">Testing signup...</p>';
+            
+            try {
+                const data = await testSignup(username, email, password, mobile);
+                result.innerHTML = `
+                    <div class="p-3 bg-green-50 border border-green-200 rounded">
+                        <p class="text-green-800 font-semibold">✅ Signup Successful!</p>
+                        <p class="text-green-700">User: ${data.user.username}</p>
+                        <p class="text-green-700">Email: ${data.user.email}</p>
+                        <p class="text-green-700">Role: ${data.user.role}</p>
+                        <p class="text-green-700">Token: ${data.token.substring(0, 50)}...</p>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="p-3 bg-red-50 border border-red-200 rounded">
+                        <p class="text-red-800 font-semibold">❌ Signup Failed</p>
+                        <p class="text-red-700">${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Initialize
+        log('Signup test page loaded');
+        log('Backend: ' + API_BASE);
+        log('Ready to test signup');
+    </script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category-Specific Book Details Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-black mb-8 text-center gradient-text">
+            📚 Category-Specific Book Details Demo
+        </h1>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">Test Different Book Categories</h2>
+            <p class="text-gray-600 mb-6">Click on any category below to see how the book details change based on the book's category. Each category now has unique, relevant content!</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <button onclick="showBookCategory('fiction')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                    📖 Fiction
+                </button>
+                <button onclick="showBookCategory('non-fiction')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">
+                    📚 Non-Fiction
+                </button>
+                <button onclick="showBookCategory('science')" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition">
+                    🔬 Science
+                </button>
+                <button onclick="showBookCategory('technology')" class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition">
+                    💻 Technology
+                </button>
+                <button onclick="showBookCategory('romance')" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition">
+                    💕 Romance
+                </button>
+                <button onclick="showBookCategory('mystery')" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition">
+                    🔍 Mystery
+                </button>
+                <button onclick="showBookCategory('comic')" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition">
+                    💥 Comics
+                </button>
+                <button onclick="showBookCategory('unknown')" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                    ❓ Unknown
+                </button>
+            </div>
+            
+            <div id="bookDisplay" class="border-t pt-6">
+                <div class="text-center text-gray-500">
+                    <p class="text-lg">👆 Select a category above to see unique book details</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-blue-50 rounded-xl p-6">
+            <h3 class="text-xl font-bold mb-4">✨ What's Different Now?</h3>
+            <ul class="space-y-2 text-gray-700">
+                <li><strong>📝 Dynamic Descriptions:</strong> Each category has unique headlines and content</li>
+                <li><strong>⭐ Category-Specific Ratings:</strong> Different ratings and review counts per category</li>
+                <li><strong>💬 Relevant Testimonials:</strong> Reviews from category-appropriate readers</li>
+                <li><strong>🏊 Dynamic Metadata:</strong> Page counts, awards, and badges change by category</li>
+                <li><strong>🎯 Targeted Content:</strong> "Why you'll love this" sections are category-specific</li>
+            </ul>
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="http://localhost:3000" target="_blank" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition inline-block">
+                🚀 Try Live Application
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Mock book data for different categories
+        const categoryBooks = {
+            fiction: {
+                title: "The Midnight Garden",
+                author: "Elena Blackwood",
+                category: "fiction",
+                description: "A haunting tale of love and loss in Victorian England."
+            },
+            'non-fiction': {
+                title: "The Mind's Eye",
+                author: "Dr. Robert Chen",
+                category: "non-fiction",
+                description: "Revolutionary insights into human consciousness and perception."
+            },
+            science: {
+                title: "Quantum Horizons",
+                author: "Prof. Sarah Mitchell",
+                category: "science",
+                description: "Exploring the frontiers of quantum physics and reality."
+            },
+            technology: {
+                title: "Digital Revolution",
+                author: "Alex Thompson",
+                category: "technology",
+                description: "The complete guide to digital transformation in modern business."
+            },
+            romance: {
+                title: "Hearts Aligned",
+                author: "Maria Garcia",
+                category: "romance",
+                description: "A passionate love story that transcends time and distance."
+            },
+            mystery: {
+                title: "The Silent Witness",
+                author: "James Harrison",
+                category: "mystery",
+                description: "A gripping thriller that will keep you guessing until the end."
+            },
+            comic: {
+                title: "Hero Rising",
+                author: "Kevin Park",
+                category: "comic",
+                description: "An epic graphic adventure of heroes and villains."
+            },
+            unknown: {
+                title: "Mystery Book",
+                author: "Unknown Author",
+                category: "unknown",
+                description: "A book of unknown category with interesting content."
+            }
+        };
+        
+        function showBookCategory(category) {
+            const book = categoryBooks[category];
+            const display = document.getElementById('bookDisplay');
+            
+            // Generate category-specific content (simplified version)
+            const categoryContent = getCategoryContent(category);
+            
+            display.innerHTML = `
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=200&h=300" 
+                             class="w-32 h-48 object-cover rounded-lg shadow-lg" alt="Book Cover">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800">${book.title}</h3>
+                            <p class="text-lg text-gray-600 mb-2">By ${book.author}</p>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-yellow-500">⭐⭐⭐⭐⭐</span>
+                                <span class="font-semibold">${categoryContent.rating} out of 5</span>
+                                <span class="text-gray-500">(${categoryContent.reviews} reviews)</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                    📚 ${category}
+                                </span>
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                                    ${categoryContent.pages}
+                                </span>
+                                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                                    ${categoryContent.award}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-bold text-lg mb-2">📖 About This Book</h4>
+                        <p class="text-gray-700">${book.description}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-bold text-lg mb-2">❤️ Why You'll Love This ${category}</h4>
+                        <ul class="text-gray-700 space-y-1">
+                            ${categoryContent.reasons.map(reason => `<li>• ${reason}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h4 class="font-bold text-lg mb-2">💬 What Readers Are Saying</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            ${categoryContent.testimonials.map(testimonial => `
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-sm italic mb-2">"${testimonial.text}"</p>
+                                    <p class="text-sm font-semibold">- ${testimonial.name}, ${testimonial.role}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add animation
+            display.querySelector('.bg-gradient-to-r').classList.add('animate-fade-in');
+        }
+        
+        function getCategoryContent(category) {
+            const content = {
+                fiction: {
+                    rating: '4.9',
+                    reviews: '3,847',
+                    pages: '📖 380 Pages',
+                    award: '🏆 Literary Award',
+                    reasons: [
+                        'Unforgettable characters that feel like real people',
+                        'Beautiful prose that reads like poetry',
+                        'Deep themes that resonate with the human experience'
+                    ],
+                    testimonials: [
+                        { name: 'Sarah Mitchell', role: 'Book Club President', text: 'This transformed our discussions!' },
+                        { name: 'Dr. James Richardson', role: 'Literature Professor', text: 'Remarkable work of fiction.' },
+                        { name: 'Emily Chen', role: 'Avid Reader', text: 'Couldn\'t put it down!' }
+                    ]
+                },
+                'non-fiction': {
+                    rating: '4.7',
+                    reviews: '2,156',
+                    pages: '📖 420 Pages',
+                    award: '🏆 Research Prize',
+                    reasons: [
+                        'Groundbreaking research and insights',
+                        'Practical knowledge you can apply immediately',
+                        'Thought-provoking perspectives on important issues'
+                    ],
+                    testimonials: [
+                        { name: 'Michael Thompson', role: 'Research Analyst', text: 'Essential reading for professionals.' },
+                        { name: 'Dr. Lisa Anderson', role: 'University Professor', text: 'Outstanding research and analysis.' },
+                        { name: 'Robert Kim', role: 'Business Consultant', text: 'Delivers real value daily.' }
+                    ]
+                },
+                science: {
+                    rating: '4.8',
+                    reviews: '1,892',
+                    pages: '📖 450 Pages',
+                    award: '🏆 Science Medal',
+                    reasons: [
+                        'Cutting-edge research explained accessibly',
+                        'Fascinating discoveries that push boundaries',
+                        'Real-world applications of scientific principles'
+                    ],
+                    testimonials: [
+                        { name: 'Dr. Patricia Lee', role: 'Research Scientist', text: 'Brilliant science communication!' },
+                        { name: 'Jennifer Wu', role: 'Science Educator', text: 'Students finally understand concepts.' },
+                        { name: 'Mark Rodriguez', role: 'Tech Innovator', text: 'Inspired my latest project.' }
+                    ]
+                },
+                technology: {
+                    rating: '4.6',
+                    reviews: '2,743',
+                    pages: '📖 520 Pages',
+                    award: '🏆 Innovation Award',
+                    reasons: [
+                        'Actionable strategies for digital innovation',
+                        'Real-world case studies from tech leaders',
+                        'Future-proof frameworks for tomorrow\'s challenges'
+                    ],
+                    testimonials: [
+                        { name: 'Alex Chen', role: 'CTO at TechCorp', text: 'Definitive guide for leaders.' },
+                        { name: 'Sarah Johnson', role: 'Startup Founder', text: 'Helped scale our company.' },
+                        { name: 'David Park', role: 'Software Engineer', text: 'Real value, worth every penny.' }
+                    ]
+                },
+                romance: {
+                    rating: '4.9',
+                    reviews: '4,521',
+                    pages: '📖 340 Pages',
+                    award: '🏆 Romance Prize',
+                    reasons: [
+                        'Breathtaking romance that makes your heart soar',
+                        'Characters you\'ll fall in love with',
+                        'A story that celebrates the power of love'
+                    ],
+                    testimonials: [
+                        { name: 'Maria Garcia', role: 'Romance Blogger', text: 'Most beautiful romance this year!' },
+                        { name: 'Amanda Foster', role: 'Book Reviewer', text: 'Emotional depth is extraordinary.' },
+                        { name: 'Rachel Lee', role: 'Romance Reader', text: 'Laughed, cried, fell in love!' }
+                    ]
+                },
+                mystery: {
+                    rating: '4.8',
+                    reviews: '2,934',
+                    pages: '📖 400 Pages',
+                    award: '🏆 Mystery Award',
+                    reasons: [
+                        'Intricate plot with unexpected twists',
+                        'Suspense that builds to a stunning conclusion',
+                        'Clever clues and red herrings'
+                    ],
+                    testimonials: [
+                        { name: 'Tom Harrison', role: 'Mystery Reviewer', text: 'Kept me guessing until the end!' },
+                        { name: 'Susan Clarke', role: 'Book Club Member', text: 'Brilliant twists, perfect ending.' },
+                        { name: 'James Wilson', role: 'Thriller Enthusiast', text: 'Absolutely thrilling suspense!' }
+                    ]
+                },
+                comic: {
+                    rating: '4.7',
+                    reviews: '1,678',
+                    pages: '📖 280 Pages',
+                    award: '🏆 Graphic Novel Award',
+                    reasons: [
+                        'Stunning artwork that jumps off the page',
+                        'Compelling characters with incredible depth',
+                        'Action-packed storylines with heart'
+                    ],
+                    testimonials: [
+                        { name: 'Kevin Park', role: 'Comic Store Owner', text: 'Flying off our shelves!' },
+                        { name: 'Jessica Moore', role: 'Graphic Novel Reviewer', text: 'Redefines the medium.' },
+                        { name: 'Ryan Thompson', role: 'Comic Collector', text: 'One of the best ever!' }
+                    ]
+                },
+                unknown: {
+                    rating: '4.8',
+                    reviews: '2,347',
+                    pages: '📖 450 Pages',
+                    award: '🏆 Award Winner',
+                    reasons: [
+                        'Engaging content that keeps you hooked',
+                        'Well-crafted narrative and prose',
+                        'Thoughtful exploration of themes'
+                    ],
+                    testimonials: [
+                        { name: 'Book Lover', role: 'Avid Reader', text: 'Excellent book, highly recommended!' },
+                        { name: 'Reader Review', role: 'Book Enthusiast', text: 'Wonderful reading experience.' },
+                        { name: 'Happy Customer', role: 'Regular Reader', text: 'Exceeded all expectations.' }
+                    ]
+                }
+            };
+            
+            return content[category] || content.unknown;
+        }
+    </script>
+</body>
+</html>

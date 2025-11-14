@@ -19,6 +19,7 @@ class User(Base):
     email_verified = Column(Boolean, default=False)
 
     borrowings = relationship("Borrowing", back_populates="user")
+    wishlists = relationship("Wishlist", back_populates="user")
 
 class Book(Base):
     __tablename__ = "books"
@@ -34,6 +35,7 @@ class Book(Base):
     available = Column(Boolean, default=True)
 
     borrowings = relationship("Borrowing", back_populates="book")
+    wishlists = relationship("Wishlist", back_populates="book")
 
 class Borrowing(Base):
     __tablename__ = "borrowing"
@@ -49,3 +51,16 @@ class Borrowing(Base):
 
     user = relationship("User", back_populates="borrowings")
     book = relationship("Book", back_populates="borrowings")
+
+class Wishlist(Base):
+    __tablename__ = "wishlist"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
+    book_title = Column(String, nullable=False)
+    book_author = Column(String, nullable=False)
+    added_date = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="wishlists")
+    book = relationship("Book", back_populates="wishlists")

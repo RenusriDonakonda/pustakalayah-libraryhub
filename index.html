@@ -1,12 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pustakalayah LibraryHub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pustakalayah LibraryHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations for book details */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+        }
+        
+        .animate-fade-in-up {
+            animation: fade-in-up 0.8s ease-out forwards;
+        }
+        
+        .animate-pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background-size: 1000px 100%;
+            animation: shimmer 3s infinite;
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Enhanced hover effects */
+        .book-card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Loading animation */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Star rating animation */
+        .star-rating {
+            transition: all 0.3s ease;
+        }
+        
+        .star-rating:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Button press effect */
+        .btn-press:active {
+            transform: scale(0.95);
+        }
+        
+        /* Book image hover effect */
+        .book-image-hover:hover {
+            transform: rotateY(10deg) rotateX(-10deg);
+            transition: transform 0.3s ease;
+        }
+    </style>
 </head>
+<link rel="stylesheet" href="styles.css">
 <body class="font-sans">
 
 <section id="login" class="min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1568667256549-094345857637?fit=crop&w=1200&h=800')] bg-cover bg-center page-section">
@@ -102,7 +202,7 @@
     <form id="signupForm" class="space-y-4">
       <input type="text" id="newUsername" placeholder="Username" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <input type="email" id="email" placeholder="Email" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      <input type="tel" id="mobile" placeholder="Mobile Number (e.g., +1234567890)" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+      <input type="tel" id="mobile" placeholder="Mobile Number (e.g., +1234567890)" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <input type="password" id="newPassword" placeholder="Password" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
       <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-lg shadow-md hover:bg-indigo-700 transition">Sign Up</button>
     </form>
@@ -124,6 +224,9 @@
         <button onclick="showPage('catalog')" class="text-gray-700 hover:text-indigo-600 font-medium">Catalog</button>
         <button onclick="showPage('cart')" class="text-gray-700 hover:text-indigo-600 font-medium relative">
             Cart <span id="navCartCount" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </button>
+        <button onclick="showPage('wishlist')" class="text-gray-700 hover:text-pink-600 font-medium relative">
+            Wishlist <span id="navWishlistCount" class="absolute -top-2 -right-3 bg-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
         </button>
         <button onclick="showPage('borrowing')" class="text-gray-700 hover:text-indigo-600 font-medium">Borrowing</button>
         <button onclick="showPage('members')" class="text-gray-700 hover:text-indigo-600 font-medium">Members</button>
@@ -154,6 +257,7 @@
         <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="dashboard">Dashboard</button>
         <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="catalog">Catalog</button>
         <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="cart">Cart <span id="navCartCountMobile" class="ml-2 inline-block bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 text-center align-middle">0</span></button>
+        <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="wishlist">Wishlist <span id="navWishlistCountMobile" class="ml-2 inline-block bg-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 text-center align-middle">0</span></button>
         <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="borrowing">Borrowing</button>
         <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="members">Members</button>
         <button class="w-full text-left text-gray-700 py-2 px-2 rounded hover:bg-gray-50" data-target="profile">Profile</button>
@@ -245,22 +349,142 @@
     </div>
   </section>
 
-<section id="bookDetails" class="hidden min-h-screen flex items-start justify-center py-10 bg-indigo-50 bg-[url('https://images.unsplash.com/photo-1533660502127-142f1f00889c?fit=crop&w=1200&h=800')] bg-cover bg-fixed page-section">
-  <div class="max-w-3xl w-full mx-auto px-4">
-    <h2 class="text-4xl font-bold mb-6 text-indigo-700 text-center bg-white/90 p-4 rounded-xl shadow-lg">Book Details 📖</h2>
-    <div class="bg-white p-8 rounded-xl shadow-2xl border-t-4 border-indigo-500">
-      <div class="flex flex-col md:flex-row gap-6">
-        <img id="bookImage" src="https://images.unsplash.com/photo-1512820790803-83ca734da794?fit=crop&w=500&h=300" class="w-full md:w-1/3 h-auto object-cover rounded-lg shadow-xl" alt="Book Cover">
-        <div class="md:w-2/3">
-          <h3 id="bookTitle" class="text-3xl font-bold mb-2 text-gray-800">The Great Gatsby</h3>
-          <p id="bookAuthor" class="text-indigo-600 text-xl mb-4 font-semibold">By F. Scott Fitzgerald</p>
-          <p id="bookCategory" class="text-sm text-gray-500 italic mb-4 p-1 bg-gray-100 rounded-md inline-block">Category: Fiction</p>
-          <p id="bookDescription" class="text-gray-700 mb-6 leading-relaxed border-l-4 border-indigo-200 pl-4">
-            A classic story of love and loss set in the Roaring Twenties.
-          </p>
-          <button id="addToCartBtn" class="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-xl hover:bg-indigo-700 transition transform hover:scale-105">
-            Add to Cart 🛒
+<section id="bookDetails" class="hidden min-h-screen py-10 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 bg-[url('https://images.unsplash.com/photo-1533660502127-142f1f00889c?fit=crop&w=1200&h=800')] bg-cover bg-fixed page-section">
+  <div class="max-w-6xl w-full mx-auto px-4">
+    <div class="text-center mb-8">
+      <h2 class="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 drop-shadow-lg">Discover Your Next Adventure 📚</h2>
+      <p class="text-xl text-gray-600 italic">"A reader lives a thousand lives before he dies . . . The man who never reads lives only one."</p>
+    </div>
+    
+    <div class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-indigo-100">
+      <!-- Hero Section with Book Image -->
+      <div class="relative bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-white">
+        <div class="absolute top-4 right-4 bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
+          🔥 POPULAR CHOICE
+        </div>
+        <div class="flex flex-col md:flex-row gap-8 items-center">
+          <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+            <img id="bookImage" src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?fit=crop&w=400&h=600" class="relative w-64 h-96 object-cover rounded-2xl shadow-2xl transform transition duration-300 group-hover:scale-105" alt="Book Cover">
+            <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-gray-800">
+              Bestseller
+            </div>
+          </div>
+          
+          <div class="flex-1 text-center md:text-left">
+            <h1 id="bookTitle" class="text-4xl font-black mb-3 leading-tight"></h1>
+            <p id="bookAuthor" class="text-2xl mb-4 font-light opacity-90"></p>
+            
+            <!-- Rating and Reviews -->
+            <div class="flex items-center justify-center md:justify-start gap-4 mb-6">
+              <div class="flex text-yellow-300 text-2xl">
+                <span>⭐⭐⭐⭐⭐</span>
+              </div>
+              <span class="text-white/90 font-semibold">4.8 out of 5</span>
+              <span class="text-white/75">(2,347 reviews)</span>
+            </div>
+            
+            <!-- Quick Info Badges -->
+            <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+              <span id="bookCategory" class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold border border-white/30"></span>
+              <span class="bg-green-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold">
+                ✅ In Stock
+              </span>
+              <span class="bg-blue-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold">
+                📖 450 Pages
+              </span>
+              <span class="bg-purple-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold">
+                🎯 Award Winner
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Detailed Content Section -->
+      <div class="p-8">
+        <!-- Description with Highlight -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+            <span class="text-3xl">📖</span> About This Book
+          </h3>
+          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border-l-4 border-indigo-500">
+            <p id="bookDescription" class="text-gray-700 leading-relaxed text-lg"></p>
+          </div>
+        </div>
+        
+        <!-- Why You'll Love This Book -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+            <span class="text-3xl">❤️</span> Why You'll Love This Book
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gradient-to-r from-pink-50 to-red-50 p-4 rounded-xl border border-pink-200">
+              <h4 class="font-bold text-pink-800 mb-2">🎨 Captivating Storytelling</h4>
+              <p class="text-gray-700">Masterfully woven narrative that will keep you turning pages late into the night</p>
+            </div>
+            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200">
+              <h4 class="font-bold text-blue-800 mb-2">🧠 Thought-Provoking Themes</h4>
+              <p class="text-gray-700">Deep insights into human nature and society that will reshape your perspective</p>
+            </div>
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
+              <h4 class="font-bold text-green-800 mb-2">✨ Beautiful Prose</h4>
+              <p class="text-gray-700">Elegant writing style that reads like poetry and touches the soul</p>
+            </div>
+            <div class="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-xl border border-purple-200">
+              <h4 class="font-bold text-purple-800 mb-2">🏆 Award-Winning Author</h4>
+              <p class="text-gray-700">From the bestselling author who has touched millions of hearts worldwide</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Reader Testimonials -->
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+            <span class="text-3xl">💬</span> What Readers Are Saying
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="testimonialsContainer">
+            <!-- Testimonials will be dynamically inserted here -->
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <button id="addToCartBtn" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-10 py-4 rounded-2xl text-lg font-bold shadow-xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2">
+            <span class="text-2xl">🛒</span> Add to Cart - Read Now!
           </button>
+          <button id="addToWishlistBtn" class="bg-gradient-to-r from-pink-500 to-red-500 text-white px-10 py-4 rounded-2xl text-lg font-bold shadow-xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2">
+            <span class="text-2xl">❤️</span> Add to Wishlist
+          </button>
+          <button id="previewSampleBtn" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-10 py-4 rounded-2xl text-lg font-bold shadow-xl hover:shadow-2xl transition transform hover:scale-105 flex items-center gap-2">
+            <span class="text-2xl">👁️</span> Preview Sample
+          </button>
+        </div>
+        
+        <!-- Additional Info -->
+        <div class="mt-8 pt-8 border-t border-gray-200">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <p class="text-3xl mb-1">📚</p>
+              <p class="text-sm text-gray-600">Format</p>
+              <p class="font-semibold">Paperback & E-book</p>
+            </div>
+            <div>
+              <p class="text-3xl mb-1">🌍</p>
+              <p class="text-sm text-gray-600">Language</p>
+              <p class="font-semibold">English</p>
+            </div>
+            <div>
+              <p class="text-3xl mb-1">📅</p>
+              <p class="text-sm text-gray-600">Published</p>
+              <p class="font-semibold">2024 Edition</p>
+            </div>
+            <div>
+              <p class="text-3xl mb-1">🏆</p>
+              <p class="text-sm text-gray-600">Awards</p>
+              <p class="font-semibold">Best Book 2024</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -372,9 +596,39 @@
   </div>
 </section>
 
+<section id="wishlist" class="hidden min-h-screen py-10 bg-gradient-to-br from-pink-50 via-red-50 to-purple-50 bg-[url('https://images.unsplash.com/photo-1512820790803-83ca734da794?fit=crop&w=1400&h=900')] bg-cover bg-fixed page-section">
+  <div class="max-w-5xl mx-auto px-4 bg-white/95 p-6 rounded-xl shadow-2xl">
+    <h2 class="text-4xl font-bold mb-6 text-pink-700">My Wishlist ❤️</h2>
+
+    <div class="flex justify-between items-center mb-6 p-4 bg-pink-50 rounded-lg shadow-inner">
+      <p class="text-xl font-semibold text-pink-800">Books in Wishlist: <span id="wishlistCount" class="text-2xl font-extrabold text-pink-600">0</span></p>
+      <button onclick="clearWishlist()" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition font-semibold shadow-md transform hover:scale-105">Clear Wishlist 🗑️</button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+      <table class="min-w-full text-left">
+        <thead class="bg-pink-600 text-white">
+          <tr>
+            <th class="p-4">Book Title</th>
+            <th class="p-4">Author</th>
+            <th class="p-4">Added Date</th>
+            <th class="p-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wishlistItems">
+        </tbody>
+      </table>
+      <p id="emptyWishlistMessage" class="p-8 text-center text-gray-500">
+        <span class="text-6xl mb-4 block">💔</span>
+        Your wishlist is empty. Start exploring the catalog and add books you love!
+      </p>
+    </div>
+  </div>
+</section>
+
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=3"></script>
 
 <!-- Mobile bottom nav & back-to-top -->
 <div id="mobileBottomNav" class="fixed bottom-0 left-0 right-0 md:hidden bg-white/95 border-t flex justify-around py-2 shadow-lg z-40">
@@ -405,6 +659,51 @@
     <img src="" alt="Avatar preview" class="w-full h-auto rounded-lg shadow-xl object-contain">
   </div>
 </div>
+
+<!-- Simple Test Script -->
+<script>
+function showBookDetailsDirectly() {
+  console.log('=== DIRECT BOOK DETAILS TEST ===');
+  
+  try {
+    // Hide all sections
+    const allSections = document.querySelectorAll('section');
+    allSections.forEach(section => section.style.display = 'none');
+    
+    // Show book details section
+    const bookDetails = document.getElementById('bookDetails');
+    if (bookDetails) {
+      bookDetails.style.display = 'block';
+      console.log('✅ Book details section shown directly');
+    }
+    
+    // Set book info
+    const titleElement = document.getElementById('bookTitle');
+    const authorElement = document.getElementById('bookAuthor');
+    const descElement = document.getElementById('bookDescription');
+    const categoryElement = document.getElementById('bookCategory');
+    
+    if (titleElement) titleElement.textContent = 'TEST BOOK - DIRECT HTML';
+    if (authorElement) authorElement.textContent = 'By Direct Test Author';
+    if (descElement) descElement.textContent = 'This is a direct test from HTML to verify the book details page works.';
+    if (categoryElement) categoryElement.textContent = 'Category: Direct Test';
+    
+    console.log('✅ Direct book details test completed');
+    alert('Book details should now be visible with a red-bordered image!');
+  } catch (error) {
+    console.error('Error in showBookDetailsDirectly:', error);
+    alert('Error: ' + error.message);
+  }
+}
+
+// Remove auto-load - only run manually
+// window.addEventListener('load', function() {
+//   setTimeout(function() {
+//     console.log('Page loaded, running direct test...');
+//     showBookDetailsDirectly();
+//   }, 2000);
+// });
+</script>
 
 </body>
 </html>

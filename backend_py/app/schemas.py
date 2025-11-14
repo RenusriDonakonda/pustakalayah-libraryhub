@@ -105,3 +105,20 @@ class BorrowOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Wishlist
+class WishlistCreate(BaseModel):
+    book_id: int
+    book_title: str
+    book_author: str
+
+class WishlistOut(BaseModel):
+    id: int
+    user_id: int
+    book_id: int
+    book_title: str
+    book_author: str
+    added_date: datetime
+
+    class Config:
+        from_attributes = True

@@ -397,3 +397,115 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.delete(user)
     db.commit()
     return {"success": True}
+
+# Wishlist endpoints
+@router.get("/wishlist")
+def get_wishlist(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's wishlist"""
+    wishlist_items = db.query(models.Wishlist).filter(
+        models.Wishlist.user_id == current_user.id
+    ).all()
+    
+    return {
+        "success": True,
+        "wishlist": [
+            {
+                "id": item.id,
+                "book_id": item.book_id,
+                "book_title": item.book_title,
+                "book_author": item.book_author,
+                "added_date": item.added_date.isoformat()
+            }
+            for item in wishlist_items
+        ]
+    }
+
+@router.post("/wishlist")
+def add_to_wishlist(
+    book_id: int = Form(...),
+    book_title: str = Form(...),
+    book_author: str = Form(...),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add book to wishlist"""
+    # Check if book exists
+    book = db.query(models.Book).filter(models.Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Check if already in wishlist
+    existing_item = db.query(models.Wishlist).filter(
+        models.Wishlist.user_id == current_user.id,
+        models.Wishlist.book_id == book_id
+    ).first()
+    
+    if existing_item:
+        raise HTTPException(status_code=400, detail="Book already in wishlist")
+    
+    # Add to wishlist
+    wishlist_item = models.Wishlist(
+        user_id=current_user.id,
+        book_id=book_id,
+        book_title=book_title,
+        book_author=book_author
+    )
+    
+    db.add(wishlist_item)
+    db.commit()
+    db.refresh(wishlist_item)
+    
+    return {
+        "success": True,
+        "message": "Book added to wishlist",
+        "wishlist_item": {
+            "id": wishlist_item.id,
+            "book_id": wishlist_item.book_id,
+            "book_title": wishlist_item.book_title,
+            "book_author": wishlist_item.book_author,
+            "added_date": wishlist_item.added_date.isoformat()
+        }
+    }
+
+@router.delete("/wishlist/{book_id}")
+def remove_from_wishlist(
+    book_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Remove book from wishlist"""
+    wishlist_item = db.query(models.Wishlist).filter(
+        models.Wishlist.user_id == current_user.id,
+        models.Wishlist.book_id == book_id
+    ).first()
+    
+    if not wishlist_item:
+        raise HTTPException(status_code=404, detail="Book not found in wishlist")
+    
+    db.delete(wishlist_item)
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": "Book removed from wishlist"
+    }
+
+@router.get("/wishlist/check/{book_id}")
+def check_wishlist(
+    book_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Check if book is in user's wishlist"""
+    wishlist_item = db.query(models.Wishlist).filter(
+        models.Wishlist.user_id == current_user.id,
+        models.Wishlist.book_id == book_id
+    ).first()
+    
+    return {
+        "success": True,
+        "in_wishlist": wishlist_item is not None
+    }

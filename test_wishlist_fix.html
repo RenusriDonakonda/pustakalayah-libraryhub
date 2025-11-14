@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Fix Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center">🔧 Wishlist Fix Test</h1>
+        
+        <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 text-green-800">✅ Fixes Applied</h2>
+            <ul class="space-y-2 text-green-700">
+                <li>✅ Added authentication check before API call</li>
+                <li>✅ Added button disable to prevent duplicate requests</li>
+                <li>✅ Added detailed console logging for debugging</li>
+                <li>✅ Added better error handling with specific error messages</li>
+                <li>✅ Replaced annoying alerts with smooth notifications</li>
+                <li>✅ Added button state management (loading, success, error)</li>
+                <li>✅ Added automatic button re-enable on error</li>
+            </ul>
+        </div>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 text-blue-800">🧪 Test Steps</h2>
+            <div class="space-y-4">
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-blue-700 mb-2">1. Open Browser Console</h3>
+                    <p class="text-sm text-gray-600">Press F12 and go to Console tab</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-blue-700 mb-2">2. Go to Application</h3>
+                    <a href="http://localhost:3000" target="_blank" class="text-blue-600 underline">http://localhost:3000</a>
+                    <p class="text-sm text-gray-600 mt-1">Login with admin/admin</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-blue-700 mb-2">3. Test Wishlist</h3>
+                    <p class="text-sm text-gray-600">Catalog → Click any book → Click "❤️ Add to Wishlist"</p>
+                </div>
+                
+                <div class="bg-white p-4 rounded">
+                    <h3 class="font-bold text-blue-700 mb-2">4. Check Console Logs</h3>
+                    <p class="text-sm text-gray-600">Look for detailed logs showing what's happening</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 text-yellow-800">📊 Expected Console Output</h2>
+            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+                <p>🔄 Navigating to page: bookDetails</p>
+                <p>✅ Enhanced book details updated successfully</p>
+                <p>🛒 Adding to wishlist: {bookId: 1, bookTitle: "...", bookAuthor: "..."}</p>
+                <p>📤 Sending wishlist request to backend...</p>
+                <p>📥 Wishlist response status: 200</p>
+                <p>✅ Wishlist API response: {success: true, ...}</p>
+                <p>🎨 Updating wishlist UI with 1 items</p>
+            </div>
+        </div>
+        
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 text-red-800">🚨 If You Still See Errors</h2>
+            <div class="space-y-3">
+                <div class="bg-white p-3 rounded">
+                    <h3 class="font-bold text-red-700">401 Unauthorized</h3>
+                    <p class="text-sm text-gray-600">→ Login again with admin/admin</p>
+                </div>
+                
+                <div class="bg-white p-3 rounded">
+                    <h3 class="font-bold text-red-700">Connection Failed</h3>
+                    <p class="text-sm text-gray-600">→ Check backend is running on localhost:8000</p>
+                </div>
+                
+                <div class="bg-white p-3 rounded">
+                    <h3 class="font-bold text-red-700">500 Server Error</h3>
+                    <p class="text-sm text-gray-600">→ Backend database issue, restart backend</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <a href="http://localhost:3000" target="_blank" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition inline-block">
+                🚀 Test the Fixed Wishlist
+            </a>
+            
+            <p class="mt-4 text-gray-600">
+                The wishlist button should now show:<br>
+                <span class="text-gray-800">❤️ Add to Wishlist</span> → <span class="text-blue-600">⏳ Adding...</span> → <span class="text-pink-600">💖 In Wishlist</span>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
