@@ -5,7 +5,9 @@
 
 // --- CONFIG ---
 // Set API_BASE to the backend server URL for production.
-const API_BASE = 'http://localhost:8000';
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : '';
 
 function buildUrl(path) {
   if (/^https?:\/\//i.test(path)) return path;
