@@ -47,7 +47,30 @@ async function api(path, options = {}) {
         body = undefined;
       }
     }
-    function loadDemoUsers() { try { return JSON.parse(localStorage.getItem('demo_users') || '[]'); } catch(e) { return []; } }
+    function loadDemoUsers() {
+      try {
+        let users = JSON.parse(localStorage.getItem('demo_users') || '[]');
+        if (!Array.isArray(users)) users = [];
+
+        // Ensure a default admin user exists in demo mode
+        const hasAdmin = users.some(u => u && u.username === 'admin');
+        if (!hasAdmin) {
+          users.unshift({
+            id: 1,
+            username: 'admin',
+            email: 'admin@example.com',
+            password: 'admin',
+            role: 'admin',
+            member_since: new Date().toISOString()
+          });
+        }
+
+        localStorage.setItem('demo_users', JSON.stringify(users));
+        return users;
+      } catch(e) {
+        return [];
+      }
+    }
     function saveDemoUsers(list) { localStorage.setItem('demo_users', JSON.stringify(list)); }
     function getCurrentDemoUser() {
       try {
