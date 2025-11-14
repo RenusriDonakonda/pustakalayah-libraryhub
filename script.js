@@ -39,7 +39,14 @@ async function api(path, options = {}) {
     // Prevent automatic persistent login in demo mode
     // (we only authenticate when user submits the login form)
     const method = (options.method || 'GET').toUpperCase();
-    const body = options.body ? JSON.parse(options.body) : undefined;
+    let body;
+    if (options.body && !(options.body instanceof FormData)) {
+      try {
+        body = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+      } catch (e) {
+        body = undefined;
+      }
+    }
     function loadDemoUsers() { try { return JSON.parse(localStorage.getItem('demo_users') || '[]'); } catch(e) { return []; } }
     function saveDemoUsers(list) { localStorage.setItem('demo_users', JSON.stringify(list)); }
     function loadDemoBooks() {
@@ -96,7 +103,17 @@ async function api(path, options = {}) {
     }
 
     if (path.includes('/api/users/register') && method === 'POST') {
-      const { username, email, password, avatar } = body || {};
+      let username, email, password, avatar;
+
+      // Handle both JSON body and FormData
+      if (options.body instanceof FormData) {
+        username = options.body.get('username');
+        email = options.body.get('email');
+        password = options.body.get('password');
+        avatar = options.body.get('avatar');
+      } else {
+        ({ username, email, password, avatar } = body || {});
+      }
       if (!username || !email || !password) throw new Error('Missing fields');
       const users = loadDemoUsers();
       if (users.find(u => u.username === username)) throw new Error('Username already exists');
