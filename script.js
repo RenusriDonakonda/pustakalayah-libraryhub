@@ -205,6 +205,46 @@ async function api(path, options = {}) {
       const { password: _, ...userWithoutPassword } = user;
       return { user: userWithoutPassword };
     }
+    
+    // Demo: upload avatar for current user
+    if (path === '/api/users/me/avatar' && method === 'POST') {
+      const current = getCurrentDemoUser();
+      if (!current) throw new Error('Not logged in');
+      
+      let avatarFile;
+      if (options.body instanceof FormData) {
+        avatarFile = options.body.get('avatar');
+      }
+      
+      if (!avatarFile) throw new Error('Avatar file is required');
+      
+      // Convert file to data URL for storage (async operation)
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          
+          const users = loadDemoUsers();
+          const userIndex = users.findIndex(u => u.id === current.id);
+          if (userIndex === -1) {
+            reject(new Error('User not found'));
+            return;
+          }
+          
+          users[userIndex].avatar = dataUrl;
+          saveDemoUsers(users);
+          
+          // Update localStorage user
+          const updatedUser = users[userIndex];
+          const { password: _, ...userWithoutPassword } = updatedUser;
+          localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+          
+          resolve(userWithoutPassword);
+        };
+        reader.onerror = () => reject(new Error('Failed to read avatar file'));
+        reader.readAsDataURL(avatarFile);
+      });
+    }
 
     // Demo: support PUT /api/users/:id to update profile (name, email, avatar)
     if (path.match(/\/api\/users\/\d+(?:$|\?)/) && method === 'PUT') {
@@ -225,6 +265,38 @@ async function api(path, options = {}) {
       const current = getCurrentDemoUser();
       if (!current) throw new Error('Not logged in');
       const { password: _, ...userWithoutPassword } = current;
+      return userWithoutPassword;
+    }
+    
+    // Demo: update current user profile
+    if (path === '/api/users/me' && method === 'PUT') {
+      const current = getCurrentDemoUser();
+      if (!current) throw new Error('Not logged in');
+      
+      let name, email, avatar;
+      if (options.body instanceof FormData) {
+        name = options.body.get('name');
+        email = options.body.get('email');
+        avatar = options.body.get('avatar');
+      } else {
+        ({ name, email, avatar } = body || {});
+      }
+      
+      const users = loadDemoUsers();
+      const userIndex = users.findIndex(u => u.id === current.id);
+      if (userIndex === -1) throw new Error('User not found');
+      
+      if (name !== undefined && name !== null) users[userIndex].name = name;
+      if (email !== undefined && email !== null) users[userIndex].email = email;
+      if (avatar !== undefined && avatar !== null) users[userIndex].avatar = avatar;
+      
+      saveDemoUsers(users);
+      
+      // Update localStorage user
+      const updatedUser = users[userIndex];
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      
       return userWithoutPassword;
     }
     // Demo: wishlist list/load
@@ -1433,8 +1505,29 @@ window.addEventListener('DOMContentLoaded', () => {
   // Refresh user profile from backend to ensure avatar and other data are up-to-date
   async function refreshUserProfile() {
     try {
+      // In demo mode, check if user is logged in via localStorage
+      if (!API_BASE || API_BASE.trim() === '') {
+        // Demo mode: use localStorage user
+        const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+        if (storedUser && storedUser.id) {
+          activeUser = storedUser;
+          updateProfileFields(activeUser);
+          console.log('User profile loaded from localStorage (demo mode)', activeUser);
+          return;
+        }
+      }
+      
+      // Real backend mode: check for token
       const token = localStorage.getItem('token');
-      if (!token || !activeUser) return;
+      if (!token || !activeUser) {
+        // Try to get user from localStorage as fallback
+        const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+        if (storedUser && storedUser.id) {
+          activeUser = storedUser;
+          updateProfileFields(activeUser);
+        }
+        return;
+      }
       
       // Fetch fresh user data from backend
       const updatedUser = await api('/api/users/me');
@@ -1446,8 +1539,14 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error('Failed to refresh user profile:', err);
-      // If refresh fails, use cached data
-      updateProfileFields(activeUser);
+      // If refresh fails, use cached data from localStorage
+      const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+      if (storedUser && storedUser.id) {
+        activeUser = storedUser;
+        updateProfileFields(activeUser);
+      } else if (activeUser) {
+        updateProfileFields(activeUser);
+      }
     }
   }
 
