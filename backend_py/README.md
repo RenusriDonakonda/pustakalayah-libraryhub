@@ -2,13 +2,19 @@
 
 ## Setup
 
-```bash
+```powershell
 cd backend_py
 python -m venv .venv
-. .venv/Scripts/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
+
+**Note:** If you get an execution policy error when activating the virtual environment, run:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+Then try activating again.
 
 API base: `http://localhost:8000`
 

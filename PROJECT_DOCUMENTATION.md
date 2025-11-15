@@ -896,7 +896,6 @@ This project is licensed under the MIT License.
 ## 📞 Contact & Support
 
 For questions, issues, or contributions:
-- **GitHub:** [Repository URL]
 - **Email:** [Your Email]
 - **Documentation:** This file and README.md
 - **API Docs:** http://localhost:8000/docs

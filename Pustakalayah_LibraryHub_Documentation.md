@@ -445,7 +445,6 @@ ip___project/
 **Contact Information:**
 - **Developer**: Vinay Beerpuri
 - **Project**: Pustakalayah LibraryHub
-- **Repository**: Available on GitHub
 - **Documentation**: Complete technical docs
 
 ### Resources

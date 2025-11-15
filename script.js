@@ -459,6 +459,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function updateLocalStorage() { localStorage.setItem('cart', JSON.stringify(cart)); }
 
+  // Hydrate active user from localStorage on load so profile shows data after login
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    if (storedUser && storedUser.id) {
+      activeUser = storedUser;
+      updateProfileFields(activeUser);
+      if (mainContent) mainContent.classList.remove('hidden');
+      if (loginSection) loginSection.classList.add('hidden');
+    }
+  } catch (e) {
+    console.debug('Could not hydrate user from localStorage:', e);
+  }
+
   // Minimal helper UI functions used by auth flows
   function showMainForUser(user) {
     activeUser = user;
@@ -1148,6 +1161,45 @@ window.addEventListener('DOMContentLoaded', () => {
   let cart = JSON.parse(localStorage.getItem('cart') || '[]');
   let borrowRecords = [];
 
+  // --- HELPERS ---
+  const updateLocalStorage = () => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  };
+
+  // Migrate cart items: ensure all items have an 'id' field
+  // This fixes old cart items that were added without an id
+  // Note: This function assumes books are already loaded
+  function migrateCartItems() {
+    if (books.length === 0) {
+      console.log('Books not loaded yet, skipping cart migration');
+      return;
+    }
+    let cartUpdated = false;
+    cart = cart.map(item => {
+      // If item already has an id, keep it
+      if (item.id) return item;
+      
+      // Try to find the book by title and author to get its id
+      const book = books.find(b => 
+        b.title === item.title && 
+        b.author === item.author
+      );
+      
+      if (book && book.id) {
+        cartUpdated = true;
+        return { ...item, id: book.id };
+      }
+      
+      // If book not found, return item as-is (will fail validation later)
+      return item;
+    });
+    
+    if (cartUpdated) {
+      updateLocalStorage();
+      console.log('Cart items migrated: added missing IDs');
+    }
+  }
+
   // --- ELEMENTS ---
   const loginForm = document.getElementById('loginForm');
   const signupForm = document.getElementById('signupForm');
@@ -1177,11 +1229,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   let originalProfile = {};
 
-  // --- HELPERS ---
-  const updateLocalStorage = () => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  };
-
   // Use the top-level `api()` defined earlier which handles demo mode and logging.
 
   async function loadBooks() {
@@ -1201,6 +1248,9 @@ window.addEventListener('DOMContentLoaded', () => {
       console.log('Book IDs:', books.map(b => b.id));
       console.log('Book images:', books.map(b => ({title: b.title, image: b.image})));
     }
+    
+    // Migrate cart items after books are loaded
+    migrateCartItems();
   }
 
   async function loadBorrowRecords() {
@@ -1313,6 +1363,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function renderCart() {
     if (!cartItems) return;
+    
+    // Try to migrate cart items if books are loaded
+    if (books.length > 0) {
+      migrateCartItems();
+    }
+    
     cartItems.innerHTML = '';
     cart.forEach((item, i) => {
       cartItems.innerHTML += `
@@ -1429,7 +1485,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     if (id === 'members') loadMembers();
     if (id === 'profile' && activeUser) {
-      // Fetch fresh user data from backend to ensure avatar is up-to-date
+      // Immediately populate profile fields from current activeUser
+      updateProfileFields(activeUser);
+      // Then try to refresh from backend/demo for latest data
       refreshUserProfile();
     }
   };
@@ -2990,20 +3048,157 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   window.borrowBook = async function (index) {
-    if (!activeUser) { alert('Please login first.'); return; }
+    if (!activeUser) { 
+      alert('Please login first.'); 
+      return; 
+    }
+    
+    // Ensure books are loaded for migration
+    if (books.length === 0) {
+      console.log('Books not loaded, loading now...');
+      await loadBooks();
+    }
+    
+    // Run migration to ensure cart items have IDs
+    migrateCartItems();
+    
+    // Get the item - use index but also validate it exists
     const item = cart[index];
-    if (!item) return;
+    if (!item) {
+      alert('Book not found in cart. The cart may have been updated. Please try again.');
+      renderCart(); // Refresh the cart display
+      return;
+    }
+    
+    // If item still doesn't have an ID after migration, try to find it in books
+    if (!item.id) {
+      console.warn('Cart item missing ID after migration, attempting to find book...');
+      const matchingBook = books.find(b => 
+        b.title === item.title && 
+        b.author === item.author
+      );
+      if (matchingBook && matchingBook.id) {
+        item.id = matchingBook.id;
+        updateLocalStorage();
+        console.log('Found and assigned book ID:', matchingBook.id);
+      } else {
+        alert(`Cannot find book "${item.title}" in the library. Please remove this item from cart and add it again from the catalog.`);
+        console.error('Book not found in library:', item);
+        return;
+      }
+    }
+
+    // Debug: Log current state
+    console.log('=== BORROW ATTEMPT ===');
+    console.log('activeUser:', activeUser);
+    console.log('activeUser.id:', activeUser.id, 'Type:', typeof activeUser.id);
+    console.log('Cart item:', item);
+    console.log('item.id:', item.id, 'Type:', typeof item.id);
+    console.log('item.title:', item.title);
+    console.log('item.author:', item.author);
+
+    // Validate all required fields with type checking
+    // First, try to get user ID from localStorage if activeUser.id is missing
+    if (!activeUser.id && activeUser.id !== 0) {
+      console.warn('activeUser.id is missing, checking localStorage...');
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (storedUser && storedUser.id) {
+          console.log('Found user ID in localStorage:', storedUser.id);
+          activeUser = storedUser;
+          console.log('Updated activeUser from localStorage');
+        } else {
+          alert('User ID is missing. Please log in again.');
+          console.error('activeUser object:', JSON.stringify(activeUser, null, 2));
+          console.error('storedUser from localStorage:', storedUser);
+          return;
+        }
+      } catch (e) {
+        alert('User ID is missing. Please log in again.');
+        console.error('Error reading user from localStorage:', e);
+        return;
+      }
+    }
+    
+    // Final check after potential update
+    if (!activeUser.id && activeUser.id !== 0) {
+      alert('User ID is missing. Please log in again.');
+      console.error('activeUser object after checks:', JSON.stringify(activeUser, null, 2));
+      return;
+    }
+    
+    if (!item.id && item.id !== 0) {
+      alert('Book ID is missing. Please remove this item from cart and add it again.');
+      console.error('Cart item:', JSON.stringify(item, null, 2));
+      console.error('Full cart:', JSON.stringify(cart, null, 2));
+      return;
+    }
+    
+    if (!item.title || item.title.trim() === '') {
+      alert('Book title is missing. Please remove this item from cart and add it again.');
+      console.error('Cart item:', JSON.stringify(item, null, 2));
+      return;
+    }
+    
+    if (!item.author || item.author.trim() === '') {
+      alert('Book author is missing. Please remove this item from cart and add it again.');
+      console.error('Cart item:', JSON.stringify(item, null, 2));
+      return;
+    }
 
     try {
-      await api('/api/borrowing/borrow', {
+      // Ensure all values are the correct type
+      const payload = {
+        user_id: parseInt(activeUser.id, 10),
+        book_id: parseInt(item.id, 10),
+        book_title: String(item.title).trim(),
+        book_author: String(item.author).trim(),
+      };
+      
+      // Final validation after type conversion
+      if (isNaN(payload.user_id)) {
+        alert('Invalid user ID. Please log in again.');
+        return;
+      }
+      if (isNaN(payload.book_id)) {
+        alert('Invalid book ID. Please remove this item from cart and add it again.');
+        return;
+      }
+      if (!payload.book_title) {
+        alert('Book title is empty. Please remove this item from cart and add it again.');
+        return;
+      }
+      if (!payload.book_author) {
+        alert('Book author is empty. Please remove this item from cart and add it again.');
+        return;
+      }
+      
+      console.log('Sending borrow request with payload:', payload);
+      console.log('Payload JSON:', JSON.stringify(payload));
+      console.log('Payload keys:', Object.keys(payload));
+      console.log('Payload values:', Object.values(payload));
+      
+      // Double-check all fields are present and valid
+      const finalPayload = {
+        user_id: Number(payload.user_id),
+        book_id: Number(payload.book_id),
+        book_title: String(payload.book_title),
+        book_author: String(payload.book_author)
+      };
+      
+      console.log('Final payload to send:', finalPayload);
+      console.log('Final payload JSON string:', JSON.stringify(finalPayload));
+      
+      const response = await api('/api/borrowing/borrow', {
         method: 'POST',
-        body: JSON.stringify({
-          user_id: activeUser.id,
-          book_id: item.id,
-          book_title: item.title,
-          book_author: item.author,
-        })
+        body: JSON.stringify(finalPayload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log('Borrow successful, response:', response);
+      
       cart.splice(index, 1);
       updateLocalStorage();
       renderCart();
@@ -3011,7 +3206,19 @@ window.addEventListener('DOMContentLoaded', () => {
       renderBorrowList();
       alert(`${item.title} borrowed successfully! Happy reading!`);
     } catch (err) {
-      alert((err && err.message) || 'Failed to borrow');
+      console.error('Borrow error details:', {
+        error: err,
+        message: err?.message,
+        stack: err?.stack,
+        name: err?.name
+      });
+      
+      // Show more detailed error message
+      let errorMsg = 'Failed to borrow book.';
+      if (err && err.message) {
+        errorMsg = err.message;
+      }
+      alert(errorMsg);
     }
   };
 
